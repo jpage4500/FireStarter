@@ -11,6 +11,13 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.SequenceInputStream;
 import java.io.StringWriter;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import de.belu.firestopper.tools.AppStarter;
 import de.belu.firestopper.tools.SettingsProvider;
@@ -27,7 +34,7 @@ public class BackgroundHomeButtonObserverThreadADB extends Thread
     private final String CONNECTDEVICETCP = "localhost";
 
     /** Name / IP of the device to be connected via EMULATOR */
-    private final String CONNECTDEVICEEMU = "emulator";
+    private final String CONNECTDEVICEEMU = "skipemulator";
     
     /** Home-button-clicked-listener */
     private OnHomeButtonClickedListener mHomeButtonClickedListener = null;
@@ -82,8 +89,9 @@ public class BackgroundHomeButtonObserverThreadADB extends Thread
 
     /** Current active sub-thread */
     private Thread mCurrentSubThread = null;
-    
-    public String adbPath = "";
+
+    /** Current path to adb */
+    public String mAdbPath = "";
 
     /**
      * Create new BackgroundObserverThread
@@ -107,15 +115,45 @@ public class BackgroundHomeButtonObserverThreadADB extends Thread
             is.read(buffer);
             is.close();
 
-
             FileOutputStream fos = new FileOutputStream(f);
             fos.write(buffer);
             fos.close();
             f.setExecutable(true);
         } catch (Exception e) { throw new RuntimeException(e); }
-        adbPath = f.getPath();
-        Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "adb copied to path: "+adbPath);
-        
+        mAdbPath = f.getPath();
+        Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "adb copied to path: "+ mAdbPath);
+
+        Map<String, String> ipAddresses = getIpAddresses();
+    }
+
+    /**
+     * Get a list of ip addresses
+     * @return
+     */
+    public Map<String, String> getIpAddresses()
+    {
+        Map<String, String> ipAddresses = new HashMap<>();
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();)
+            {
+                NetworkInterface intf = en.nextElement();
+                if (intf.getDisplayName().equals("eth0") || intf.getDisplayName().equals("wlan0")) {
+                    Log.d("networkInterface", intf.getDisplayName());
+                    for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                        InetAddress inetAddress = enumIpAddr.nextElement();
+                        if (!inetAddress.isLoopbackAddress() && !inetAddress.isMulticastAddress()) {
+                            String ip = inetAddress.getHostAddress().toString();
+                            if (ip.contains(".")) {
+                                ipAddresses.put(intf.getDisplayName(), inetAddress.getHostAddress().toString());
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            Log.e("IP Address", ex.toString());
+        }
+        return ipAddresses;
     }
 
     /** Try to stop thread */
@@ -232,7 +270,7 @@ public class BackgroundHomeButtonObserverThreadADB extends Thread
                             Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "GETADBEMUDEVICETHREAD: try get adb device");
 
                             // Run process
-                            mProcess = Runtime.getRuntime().exec(new String[]{adbPath, "devices"});
+                            mProcess = Runtime.getRuntime().exec(new String[]{mAdbPath, "devices"});
 
                             // Get output reader
                             mReader = new BufferedReader(new InputStreamReader(mProcess.getInputStream()));
@@ -299,7 +337,7 @@ public class BackgroundHomeButtonObserverThreadADB extends Thread
                     break;
                 }
 
-                // Only if no emulator have been found, try to connect localhost:
+                // Only if no emulator have been found, try to connect over network:
                 if(!mIsConnected)
                 {
                     // Reset adb device name
@@ -313,31 +351,88 @@ public class BackgroundHomeButtonObserverThreadADB extends Thread
                         {
                             try
                             {
-                                Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "CONNECTHREAD: try connect to " + CONNECTDEVICETCP);
+                                String ipAddress = null;
+                                Map<String, String> ipAddresses = getIpAddresses();
+                                if (ipAddresses.containsKey("eth0")) {
+                                    ipAddress = ipAddresses.get("eth0");
+                                } else if (ipAddresses.containsKey("wlan0")) {
+                                    ipAddress = ipAddresses.get("wlan0");
+                                }
+                                if (ipAddress != null) {
+//                                    Log.d("adb-kill", "trying to kill adb");
+//                                    try {
+//                                        mProcess = Runtime.getRuntime().exec(new String[]{mAdbPath, "kill-server"});
+//                                        mReader = new BufferedReader(new InputStreamReader(mProcess.getInputStream()));
+//                                        try
+//                                        {
+//                                            // Reads stdout of process
+//                                            while ((mReadBytes = mReader.read(mReadBuffer)) > 0)
+//                                            {
+//                                                String message = String.valueOf(mReadBuffer, 0, mReadBytes);
+//                                                Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "CONNECTHREAD: adb received: " + message);
+//                                                fireServiceErrorEvent(message);
+//                                            }
+//                                        }
+//                                        finally
+//                                        {
+//                                            mReader.close();
+//                                        }
+//                                        mProcess.waitFor();
+//                                    } catch (Exception e) {
+//                                        Log.e("adb-kill", e.getMessage());
+//                                    }
+//                                    Log.d("adb-start", "trying to start in tcpip 5555");
+//                                    try {
+//                                        mProcess = Runtime.getRuntime().exec(new String[]{mAdbPath, "tcpip", "5555"});
+//                                        mReader = new BufferedReader(new InputStreamReader(mProcess.getInputStream()));
+//                                        try
+//                                        {
+//                                            // Reads stdout of process
+//                                            while ((mReadBytes = mReader.read(mReadBuffer)) > 0)
+//                                            {
+//                                                String message = String.valueOf(mReadBuffer, 0, mReadBytes);
+//                                                Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "CONNECTHREAD: adb received: " + message);
+//                                                fireServiceErrorEvent(message);
+//                                            }
+//                                        }
+//                                        finally
+//                                        {
+//                                            mReader.close();
+//                                        }
+//                                        mProcess.waitFor();
+//                                    } catch (Exception e) {
+//                                        Log.e("adb-start", e.getMessage());
+//                                    }
 
-                                // Run process
-                                mProcess = Runtime.getRuntime().exec(new String[]{adbPath, "connect", CONNECTDEVICETCP});
+                                    Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "CONNECTHREAD: try connect to " + ipAddress);
 
-                                // Get output reader
-                                mReader = new BufferedReader(new InputStreamReader(mProcess.getInputStream()));
-                                try
-                                {
-                                    // Reads stdout of process
-                                    while ((mReadBytes = mReader.read(mReadBuffer)) > 0)
+                                    // Run process
+                                    mProcess = Runtime.getRuntime().exec(new String[]{mAdbPath, "connect", ipAddress});
+
+                                    // Get output reader
+                                    mReader = new BufferedReader(new InputStreamReader(mProcess.getInputStream()));
+                                    try
                                     {
-                                        String message = String.valueOf(mReadBuffer, 0, mReadBytes);
-                                        Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "CONNECTHREAD: adb received: " + message);
-                                        if (message.contains("connected") && !message.contains("unable"))
+                                        // Reads stdout of process
+                                        while ((mReadBytes = mReader.read(mReadBuffer)) > 0)
                                         {
-                                            mIsConnected = true;
+                                            String message = String.valueOf(mReadBuffer, 0, mReadBytes);
+                                            Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "CONNECTHREAD: adb received: " + message);
+                                            fireServiceErrorEvent(message);
+                                            if (message.contains("connected") && !message.contains("unable"))
+                                            {
+                                                mIsConnected = true;
+                                            }
                                         }
                                     }
+                                    finally
+                                    {
+                                        mReader.close();
+                                    }
+                                    mProcess.waitFor();
+                                } else {
+
                                 }
-                                finally
-                                {
-                                    mReader.close();
-                                }
-                                mProcess.waitFor();
                             }
                             catch (Exception e)
                             {
@@ -380,7 +475,7 @@ public class BackgroundHomeButtonObserverThreadADB extends Thread
                                 Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "GETADBDEVICETHREAD: try get adb device");
 
                                 // Run process
-                                mProcess = Runtime.getRuntime().exec(new String[]{adbPath, "devices"});
+                                mProcess = Runtime.getRuntime().exec(new String[]{mAdbPath, "devices"});
 
                                 // Get output reader
                                 mReader = new BufferedReader(new InputStreamReader(mProcess.getInputStream()));
@@ -463,7 +558,7 @@ public class BackgroundHomeButtonObserverThreadADB extends Thread
                             Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "EMPTYLOGCATTHREAD: try clear logcat");
 
                             // Run process
-                            mProcess = Runtime.getRuntime().exec(new String[]{adbPath, "-s", mAdbDevice, "logcat", "-c"});
+                            mProcess = Runtime.getRuntime().exec(new String[]{mAdbPath, "-s", mAdbDevice, "logcat", "-c"});
 
                             // Get output reader
                             mReader = new BufferedReader(new InputStreamReader(new SequenceInputStream(mProcess.getInputStream(), mProcess.getErrorStream())));
@@ -526,7 +621,7 @@ public class BackgroundHomeButtonObserverThreadADB extends Thread
                 Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "Adb logcat cleared, now start observation..");
 
                 // Start logcat with proper filters
-                mProcess = Runtime.getRuntime().exec(new String[]{adbPath, "-s", mAdbDevice, "logcat", "ActivityManager:I", "*:S"});
+                mProcess = Runtime.getRuntime().exec(new String[]{mAdbPath, "-s", mAdbDevice, "logcat", "ActivityManager:I", "*:S"});
 
                 // Seems as everything is fine, so reset fail-counter
                 mIsObservationRunning = true;
@@ -672,103 +767,6 @@ public class BackgroundHomeButtonObserverThreadADB extends Thread
         mCurrentSubThread = null;
     }
 
-//    /**
-//     * Trys to kill current running process
-//     * @param component Name of the initiating component
-//     */
-//    private void killCurrentProcess(String component)
-//    {
-//        // Try to kill process
-//        try
-//        {
-//            Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), component + ": Try to kill running process");
-//            Integer exitCode = killUnixProcess(mProcess);
-//            if(exitCode != 0)
-//            {
-//                throw new Exception("Received exit-code was not zero but " + exitCode.toString());
-//            }
-//
-//            try
-//            {
-//                Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "killProcess: call adb --help");
-//
-//                // Run process
-//                mProcess = Runtime.getRuntime().exec(new String[]{"adb", "--help"});
-//
-//                // Get output reader
-//                mReader = new BufferedReader(new InputStreamReader(mProcess.getInputStream()));
-//                try
-//                {
-//                    // Reads stdout of process
-//                    while ((mReadBytes = mReader.read(mReadBuffer)) > 0)
-//                    {
-//                        String message = String.valueOf(mReadBuffer, 0, mReadBytes);
-//                        Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "killProcess: adb received: " + message);
-//                    }
-//                }
-//                finally
-//                {
-//                    mReader.close();
-//                }
-//                mProcess.waitFor();
-//
-//                Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "killProcess: call adb --help finished..");
-//            }
-//            catch(Exception e)
-//            {
-//                StringWriter errors = new StringWriter();
-//                e.printStackTrace(new PrintWriter(errors));
-//                String errorReason = errors.toString();
-//                Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "killProcess: Exception: \n" + errorReason);
-//            }
-//
-//            Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), component + ": Killed running process successful");
-//        }
-//        catch(Exception e)
-//        {
-//            StringWriter errors = new StringWriter();
-//            e.printStackTrace(new PrintWriter(errors));
-//            String errorReason = errors.toString();
-//            Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), component + ": Exception while killing process: \n" + errorReason);
-//        }
-//    }
-//
-//    /**
-//     * @param process Process of interest
-//     * @return Process PID
-//     * @throws Exception if process is no unix-process
-//     */
-//    private static int getUnixPID(Process process) throws Exception
-//    {
-//        Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "GetUnixPID: process name: " + process.getClass().getName());
-//        if (process.getClass().getName().startsWith("java.lang."))
-//        {
-//            Class cl = process.getClass();
-//            Field field = cl.getDeclaredField("pid");
-//            field.setAccessible(true);
-//            Object pidObject = field.get(process);
-//            return (Integer) pidObject;
-//        }
-//        else
-//        {
-//            throw new IllegalArgumentException("Needs to be a UNIXProcess");
-//        }
-//    }
-//
-//    /**
-//     * Trys to kill given process
-//     * @param process Process to be killed
-//     * @return  ExitValue of the kill-process
-//     * @throws Exception if process is no unix-process
-//     */
-//    private static int killUnixProcess(Process process) throws Exception
-//    {
-//        Integer pid = getUnixPID(process);
-//        Log.d(BackgroundHomeButtonObserverThreadADB.class.getName(), "KillUnixProcess: pid: " + pid.toString());
-//        Integer retVal = Runtime.getRuntime().exec("kill " + pid).waitFor();
-//        process.destroy();
-//        return retVal;
-//    }
     
     /**
      * Fire home button clicked event to all registered listeners
