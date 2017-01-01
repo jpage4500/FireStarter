@@ -12,20 +12,20 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-public class ZipDirectory
-{
+import lombok.extern.slf4j.Slf4j;
 
-    public static void zipDirectory(String directoryPath, String zipFileNamePath) throws IOException
-    {
+
+@Slf4j
+public class ZipDirectory {
+
+    public static void zipDirectory(String directoryPath, String zipFileNamePath) throws IOException {
         File directoryToZip = new File(directoryPath);
         File zipFile = new File(zipFileNamePath);
         File zipFilePath = zipFile.getParentFile();
-        if (!zipFilePath.exists())
-        {
+        if (!zipFilePath.exists()) {
             zipFilePath.mkdirs();
         }
-        if (zipFile.exists())
-        {
+        if (zipFile.exists()) {
             zipFile.delete();
         }
 
@@ -35,41 +35,33 @@ public class ZipDirectory
     }
 
 
-
     /**
      * Extract a zip file to the given destination folder.
-     * @param file zip file to extract
+     *
+     * @param file        zip file to extract
      * @param destination destinatin folder
      */
-    public static void unZipDirectory(File file, File destination) throws IOException
-    {
+    public static void unZipDirectory(File file, File destination) throws IOException {
         ZipInputStream in = null;
         OutputStream out = null;
-        try
-        {
+        try {
             // Open the ZIP file
             in = new ZipInputStream(new FileInputStream(file));
 
             ZipEntry entry = null;
-            while ((entry = in.getNextEntry()) != null)
-            {
+            while ((entry = in.getNextEntry()) != null) {
                 String outFilename = entry.getName();
 
                 // Open the output file
-                if (entry.isDirectory())
-                {
+                if (entry.isDirectory()) {
                     new File(destination, outFilename).mkdirs();
-                }
-                else
-                {
+                } else {
                     File outputFile = new File(destination, outFilename);
                     File outputFileFolder = outputFile.getParentFile();
-                    if(!outputFileFolder.exists())
-                    {
+                    if (!outputFileFolder.exists()) {
                         outputFileFolder.mkdirs();
                     }
-                    if(outputFile.exists())
-                    {
+                    if (outputFile.exists()) {
                         outputFile.delete();
                     }
                     out = new FileOutputStream(outputFile);
@@ -78,8 +70,7 @@ public class ZipDirectory
                     byte[] buf = new byte[1024];
                     int len;
 
-                    while ((len = in.read(buf)) > 0)
-                    {
+                    while ((len = in.read(buf)) > 0) {
                         out.write(buf, 0, len);
                     }
 
@@ -87,65 +78,49 @@ public class ZipDirectory
                     out.close();
                 }
             }
-        }
-        finally
-        {
+        } finally {
             // Close the stream
-            if (in != null)
-            {
+            if (in != null) {
                 in.close();
             }
-            if (out != null)
-            {
+            if (out != null) {
                 out.close();
             }
         }
     }
 
-    private static void getAllFiles(File dir, List<File> fileList)
-    {
+    private static void getAllFiles(File dir, List<File> fileList) {
         File[] files = dir.listFiles();
-        for (File file : files)
-        {
+        for (File file : files) {
             fileList.add(file);
-            if (file.isDirectory())
-            {
+            if (file.isDirectory()) {
                 getAllFiles(file, fileList);
             }
         }
     }
 
-    private static void writeZipFile(File directoryToZip, List<File> fileList, File zipFile)
-    {
+    private static void writeZipFile(File directoryToZip, List<File> fileList, File zipFile) {
 
-        try
-        {
+        try {
             FileOutputStream fos = new FileOutputStream(zipFile);
             ZipOutputStream zos = new ZipOutputStream(fos);
 
-            for (File file : fileList)
-            {
-                if (file.exists() && !file.isDirectory())
-                { // we only zip files, not directories
+            for (File file : fileList) {
+                if (file.exists() && !file.isDirectory()) { // we only zip files, not directories
                     addToZip(directoryToZip, file, zos);
                 }
             }
 
             zos.close();
             fos.close();
-        }
-        catch (FileNotFoundException e)
-        {
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void addToZip(File directoryToZip, File file, ZipOutputStream zos) throws FileNotFoundException, IOException
-    {
+    private static void addToZip(File directoryToZip, File file, ZipOutputStream zos) throws FileNotFoundException, IOException {
 
         FileInputStream fis = new FileInputStream(file);
 
@@ -159,8 +134,7 @@ public class ZipDirectory
 
         byte[] bytes = new byte[1024];
         int length;
-        while ((length = fis.read(bytes)) >= 0)
-        {
+        while ((length = fis.read(bytes)) >= 0) {
             zos.write(bytes, 0, length);
         }
 

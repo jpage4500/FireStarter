@@ -3,7 +3,6 @@ package de.belu.firestopper.tools;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.widget.Toast;
 
 import java.io.PrintWriter;
@@ -17,15 +16,16 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 import de.belu.firestopper.R;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Settings Provider to store all Settins of the app
  */
-public class SettingsProvider
-{
+
+@Slf4j
+public class SettingsProvider {
     /** Map of possible languages */
-    public static final Map<String, String> LANG = new LinkedHashMap<String, String>()
-    {{
+    public static final Map<String, String> LANG = new LinkedHashMap<String, String>() {{
         // Key is the static field name of Locale (e.g. Locale.GERMAN or Locale.ENGLISH)
         // Value is the displayed value for the settings
         put("", "Auto");
@@ -43,10 +43,8 @@ public class SettingsProvider
     private static Semaphore mSemaphore = new Semaphore(1);
 
     /** Synchronized singleton getter (Thread Safe) */
-    public static synchronized SettingsProvider getInstance (Context context)
-    {
-        if(SettingsProvider._instance == null)
-        {
+    public static synchronized SettingsProvider getInstance(Context context) {
+        if (SettingsProvider._instance == null) {
             SettingsProvider._instance = new SettingsProvider(context);
         }
         return SettingsProvider._instance;
@@ -125,8 +123,7 @@ public class SettingsProvider
     Boolean mShowBackgroundForAppNames = false;
 
     /** Create a the instace of SettingsProvider */
-    private SettingsProvider(Context context)
-    {
+    private SettingsProvider(Context context) {
         mContext = context;
         mStartupPackage = context.getApplicationInfo().packageName;
         mSingleClickApp = context.getApplicationInfo().packageName;
@@ -136,10 +133,10 @@ public class SettingsProvider
 
     /**
      * Set order of packages for app-drawer
+     *
      * @param packageOrder List of packagenames in correct order
      */
-    public void setPackageOrder(List<String> packageOrder)
-    {
+    public void setPackageOrder(List<String> packageOrder) {
         mPackageOrder = packageOrder;
         storeValues();
     }
@@ -147,267 +144,239 @@ public class SettingsProvider
     /**
      * @return List of packagenames in last saved order
      */
-    public List<String> getPackageOrder()
-    {
+    public List<String> getPackageOrder() {
         readValues();
         return mPackageOrder;
     }
 
-    public void setHideLeftBarInAppOverview(Boolean value)
-    {
+    public void setHideLeftBarInAppOverview(Boolean value) {
         mHideLeftBarInAppOverview = value;
         storeValues();
     }
-    public Boolean getHideLeftBarInAppOverview()
-    {
+
+    public Boolean getHideLeftBarInAppOverview() {
         readValues();
         return mHideLeftBarInAppOverview;
     }
 
-    public void setShowBackgroundForAppNames(Boolean value)
-    {
+    public void setShowBackgroundForAppNames(Boolean value) {
         mShowBackgroundForAppNames = value;
         storeValues();
     }
-    public Boolean getShowBackgroundForAppNames()
-    {
+
+    public Boolean getShowBackgroundForAppNames() {
         readValues();
         return mShowBackgroundForAppNames;
     }
 
-    public void setClearPreviousInstancesForDoubleClick(Boolean value)
-    {
+    public void setClearPreviousInstancesForDoubleClick(Boolean value) {
         mClearPreviousInstancesForDoubleClick = value;
         storeValues();
     }
-    public Boolean getClearPreviousInstancesForDoubleClick()
-    {
+
+    public Boolean getClearPreviousInstancesForDoubleClick() {
         readValues();
         return mClearPreviousInstancesForDoubleClick;
     }
 
-    public void setClearPreviousInstancesForSingleClick(Boolean value)
-    {
+    public void setClearPreviousInstancesForSingleClick(Boolean value) {
         mClearPreviousInstancesForSingleClick = value;
         storeValues();
     }
-    public Boolean getClearPreviousInstancesForSingleClick()
-    {
+
+    public Boolean getClearPreviousInstancesForSingleClick() {
         readValues();
         return mClearPreviousInstancesForSingleClick;
     }
 
-    public void setBackgroundObservationFallBackToNonAdb(Boolean value)
-    {
+    public void setBackgroundObservationFallBackToNonAdb(Boolean value) {
         mBackgroundObservationFallBackToNonAdb = value;
         storeValues();
     }
-    public Boolean getBackgroundObservationFallBackToNonAdb()
-    {
+
+    public Boolean getBackgroundObservationFallBackToNonAdb() {
         readValues();
         return mBackgroundObservationFallBackToNonAdb;
     }
 
-    public void setBackgroundObservationViaAdb(Boolean value)
-    {
+    public void setBackgroundObservationViaAdb(Boolean value) {
         mBackgroundObservationViaAdb = value;
         storeValues();
     }
-    public Boolean getBackgroundObservationViaAdb()
-    {
+
+    public Boolean getBackgroundObservationViaAdb() {
         readValues();
         return mBackgroundObservationViaAdb;
     }
 
-    public void setBackgroundObserverEnabled(Boolean value)
-    {
+    public void setBackgroundObserverEnabled(Boolean value) {
         mBackgroundObserverEnabled = value;
         storeValues();
     }
-    public Boolean getBackgroundObserverEnabled()
-    {
+
+    public Boolean getBackgroundObserverEnabled() {
         readValues();
         return mBackgroundObserverEnabled;
     }
 
-    public void setHaveUpdateSeen(Boolean value)
-    {
+    public void setHaveUpdateSeen(Boolean value) {
         mHaveUpdateSeen = value;
         storeValues();
     }
-    public Boolean getHaveUpdateSeen()
-    {
+
+    public Boolean getHaveUpdateSeen() {
         readValues();
         return mHaveUpdateSeen;
     }
 
-    public void setAutoSelectFirstIcon(Boolean value)
-    {
+    public void setAutoSelectFirstIcon(Boolean value) {
         mAutoSelectFirstIcon = value;
         storeValues();
     }
-    public Boolean getAutoSelectFirstIcon()
-    {
+
+    public Boolean getAutoSelectFirstIcon() {
         readValues();
         return mAutoSelectFirstIcon;
     }
 
-    public void setKodiUpdatePolicy(String policy)
-    {
+    public void setKodiUpdatePolicy(String policy) {
         mKodiUpdatePolicy = policy;
         storeValues();
     }
-    public String getKodiUpdatePolicy()
-    {
+
+    public String getKodiUpdatePolicy() {
         readValues();
         return mKodiUpdatePolicy;
     }
 
-    public void setLanguage(String language)
-    {
+    public void setLanguage(String language) {
         mLanguage = language;
         storeValues();
     }
-    public String getLanguage()
-    {
+
+    public String getLanguage() {
         readValues();
         return mLanguage;
     }
 
-    public void setStartupPackage(String startupPackage)
-    {
+    public void setStartupPackage(String startupPackage) {
         mStartupPackage = startupPackage;
         storeValues();
     }
-    public String getStartupPackage()
-    {
+
+    public String getStartupPackage() {
         readValues();
         return mStartupPackage;
     }
 
-    public void setSingleClickApp(String singleClickApp)
-    {
+    public void setSingleClickApp(String singleClickApp) {
         mSingleClickApp = singleClickApp;
         storeValues();
     }
-    public String getSingleClickApp()
-    {
+
+    public String getSingleClickApp() {
         readValues();
         return mSingleClickApp;
     }
 
-    public void setDoubleClickApp(String doubleClickApp)
-    {
+    public void setDoubleClickApp(String doubleClickApp) {
         mDoubleClickApp = doubleClickApp;
         storeValues();
     }
-    public String getDoubleClickApp()
-    {
+
+    public String getDoubleClickApp() {
         readValues();
         return mDoubleClickApp;
     }
 
-    public void setHiddenApps(Set<String> hiddenApps)
-    {
+    public void setHiddenApps(Set<String> hiddenApps) {
         mHiddenAppsList = hiddenApps;
         storeValues();
     }
-    public Set<String> getHiddenApps()
-    {
+
+    public Set<String> getHiddenApps() {
         readValues();
         return mHiddenAppsList;
     }
 
-    public void setShowSystemApps(Boolean value)
-    {
+    public void setShowSystemApps(Boolean value) {
         mShowSystemApps = value;
         storeValues();
     }
-    public Boolean getShowSystemApps()
-    {
+
+    public Boolean getShowSystemApps() {
         readValues();
         return mShowSystemApps;
     }
 
-    public Boolean setAppIconSize(Object appIconSize, Boolean simulate)
-    {
+    public Boolean setAppIconSize(Object appIconSize, Boolean simulate) {
         Boolean retVal = numberCheck(appIconSize, 0, 200);
-        if(!simulate && retVal)
-        {
+        if (!simulate && retVal) {
             setAppIconSize(Integer.valueOf(appIconSize.toString()));
         }
         return retVal;
     }
-    public void setAppIconSize(Integer appIconSize)
-    {
+
+    public void setAppIconSize(Integer appIconSize) {
         mAppIconSize = appIconSize;
         storeValues();
     }
-    public Integer getAppIconSize()
-    {
+
+    public Integer getAppIconSize() {
         readValues();
         return mAppIconSize;
     }
 
-    public Boolean setDoubleClickInterval(Object doubleClickInterval, Boolean simulate)
-    {
+    public Boolean setDoubleClickInterval(Object doubleClickInterval, Boolean simulate) {
         Boolean retVal = numberCheck(doubleClickInterval, 100, 1000);
-        if(!simulate && retVal)
-        {
+        if (!simulate && retVal) {
             setDoubleClickInterval(Integer.valueOf(doubleClickInterval.toString()));
         }
         return retVal;
     }
-    public void setDoubleClickInterval(Integer doubleClickInterval)
-    {
+
+    public void setDoubleClickInterval(Integer doubleClickInterval) {
         mDoubleClickInterval = doubleClickInterval;
         storeValues();
     }
-    public Integer getDoubleClickInterval()
-    {
+
+    public Integer getDoubleClickInterval() {
         readValues();
         return mDoubleClickInterval;
     }
 
-    public Boolean setJumpbackWatchdogTime(Object jumpbackWatchdogTime, Boolean simulate)
-    {
+    public Boolean setJumpbackWatchdogTime(Object jumpbackWatchdogTime, Boolean simulate) {
         Boolean retVal = numberCheck(jumpbackWatchdogTime, 0, 10000);
-        if(!simulate && retVal)
-        {
+        if (!simulate && retVal) {
             setJumpbackWatchdogTime(Integer.valueOf(jumpbackWatchdogTime.toString()));
         }
         return retVal;
     }
-    public void setJumpbackWatchdogTime(Integer jumpbackWatchdogTime)
-    {
+
+    public void setJumpbackWatchdogTime(Integer jumpbackWatchdogTime) {
         mJumpbackWatchdogTime = jumpbackWatchdogTime;
         storeValues();
     }
-    public Integer getJumpbackWatchdogTime()
-    {
+
+    public Integer getJumpbackWatchdogTime() {
         readValues();
         return mJumpbackWatchdogTime;
     }
 
-    private boolean numberCheck(Object newValue, Integer min, Integer max)
-    {
+    private boolean numberCheck(Object newValue, Integer min, Integer max) {
         Boolean retVal = false;
 
-        try
-        {
-            if(!newValue.toString().equals("")  &&  newValue.toString().matches("\\d*") )
-            {
+        try {
+            if (!newValue.toString().equals("") && newValue.toString().matches("\\d*")) {
                 Integer value = Integer.valueOf(newValue.toString());
-                if(value >= min && value <= max)
-                {
+                if (value >= min && value <= max) {
                     retVal = true;
                 }
             }
+        } catch (Exception ignore) {
         }
-        catch(Exception ignore){}
 
-        if(!retVal)
-        {
+        if (!retVal) {
             Toast.makeText(mContext, newValue + " " + mContext.getResources().getString(R.string.is_invalid_number), Toast.LENGTH_SHORT).show();
         }
 
@@ -417,25 +386,21 @@ public class SettingsProvider
     /**
      * Read values from settings
      */
-    public void readValues()
-    {
+    public void readValues() {
         readValues(false);
     }
 
     /**
      * @param forceRead Force reading values from preferences
      */
-    public void readValues(Boolean forceRead)
-    {
-        try
-        {
+    public void readValues(Boolean forceRead) {
+        try {
             // ATTENTION: NEVER CALL ONE OF THE GETTERS OR SETTERS IN HERE!
             // Aquire semaphore
             mSemaphore.acquire();
 
             // Load only once (hold in singleton)
-            if (mIsLoaded && !forceRead)
-            {
+            if (mIsLoaded && !forceRead) {
                 mSemaphore.release();
                 return;
             }
@@ -443,8 +408,7 @@ public class SettingsProvider
             // PackageList
             List<String> packageList = new ArrayList<String>();
             Integer size = mPreferences.getInt(PACKAGEORDER + "size", 0);
-            for (Integer i = 0; i < size; i++)
-            {
+            for (Integer i = 0; i < size; i++) {
                 String actKey = PACKAGEORDER + i.toString();
                 packageList.add(mPreferences.getString(actKey, null));
             }
@@ -500,34 +464,29 @@ public class SettingsProvider
 
             // App icon size
             String pref = mPreferences.getString("prefAppIconSize", mAppIconSize.toString());
-            if(setAppIconSize(pref, true))
-            {
+            if (setAppIconSize(pref, true)) {
                 mAppIconSize = Integer.valueOf(pref);
             }
 
             // Double click interval
             pref = mPreferences.getString("prefClickInterval", mDoubleClickInterval.toString());
-            if(setDoubleClickInterval(pref, true))
-            {
+            if (setDoubleClickInterval(pref, true)) {
                 mDoubleClickInterval = Integer.valueOf(pref);
             }
 
             // Jumpback watchdog time
             pref = mPreferences.getString("prefJumpbackWatchdogTime", mJumpbackWatchdogTime.toString());
-            if(setJumpbackWatchdogTime(pref, true))
-            {
+            if (setJumpbackWatchdogTime(pref, true)) {
                 mJumpbackWatchdogTime = Integer.valueOf(pref);
             }
 
             // Set is loaded flag
             mIsLoaded = true;
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             StringWriter errors = new StringWriter();
             e.printStackTrace(new PrintWriter(errors));
             String errorReason = errors.toString();
-            Log.d(SettingsProvider.class.getName(), "Exception while reading settings: \n" + errorReason);
+            log.debug("Exception while reading settings: \n" + errorReason);
         }
 
         mSemaphore.release();
@@ -536,10 +495,8 @@ public class SettingsProvider
     /**
      * Store values to settings
      */
-    public void storeValues()
-    {
-        try
-        {
+    public void storeValues() {
+        try {
             // ATTENTION: NEVER CALL ONE OF THE GETTERS OR SETTERS IN HERE!
             // Aquire semaphore
             mSemaphore.acquire();
@@ -551,8 +508,7 @@ public class SettingsProvider
 
             // PackageList
             editor.putInt(PACKAGEORDER + "size", mPackageOrder.size());
-            for (Integer i = 0; i < mPackageOrder.size(); i++)
-            {
+            for (Integer i = 0; i < mPackageOrder.size(); i++) {
                 String actKey = PACKAGEORDER + i.toString();
                 editor.remove(actKey);
                 editor.putString(actKey, mPackageOrder.get(i));
@@ -617,13 +573,11 @@ public class SettingsProvider
 
 
             editor.commit();
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             StringWriter errors = new StringWriter();
             e.printStackTrace(new PrintWriter(errors));
             String errorReason = errors.toString();
-            Log.d(SettingsProvider.class.getName(), "Exception while reading settings: \n" + errorReason);
+            log.debug("Exception while reading settings: \n" + errorReason);
         }
 
         mSemaphore.release();

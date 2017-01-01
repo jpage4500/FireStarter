@@ -22,24 +22,22 @@ import de.belu.firestopper.tools.AppInfo;
 import de.belu.firestopper.tools.KodiUpdater;
 import de.belu.firestopper.tools.SettingsProvider;
 import de.belu.firestopper.tools.Tools;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Preferences activity
  */
-public class PreferenceActivity extends PreferenceFragment
-{
+
+@Slf4j
+public class PreferenceActivity extends PreferenceFragment {
     SettingsProvider mSettings = SettingsProvider.getInstance(this.getActivity());
 
-    SharedPreferences.OnSharedPreferenceChangeListener mSharedPreferenceListener = new SharedPreferences.OnSharedPreferenceChangeListener()
-    {
+    SharedPreferences.OnSharedPreferenceChangeListener mSharedPreferenceListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
         @Override
-        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
-        {
-            Thread readValuesThread = new Thread(new Runnable()
-            {
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            Thread readValuesThread = new Thread(new Runnable() {
                 @Override
-                public void run()
-                {
+                public void run() {
                     mSettings.readValues(true);
                 }
             });
@@ -47,8 +45,7 @@ public class PreferenceActivity extends PreferenceFragment
         }
     };
 
-    public PreferenceActivity()
-    {
+    public PreferenceActivity() {
 
     }
 
@@ -69,8 +66,7 @@ public class PreferenceActivity extends PreferenceFragment
 //    }
 
     @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         addPreferencesFromResource(R.xml.preferencesactivity);
@@ -84,8 +80,7 @@ public class PreferenceActivity extends PreferenceFragment
         entries[0] = " - No Action - ";
         entryValues[0] = "";
 
-        for (Integer i = 1; i < actApps.size() + 1; i++)
-        {
+        for (Integer i = 1; i < actApps.size() + 1; i++) {
             AppInfo actApp = actApps.get(i - 1);
             entries[i] = actApp.getDisplayName();
             entryValues[i] = actApp.packageName;
@@ -112,8 +107,7 @@ public class PreferenceActivity extends PreferenceFragment
         CharSequence[] langEntries = new CharSequence[SettingsProvider.LANG.size()];
         CharSequence[] langValues = new CharSequence[SettingsProvider.LANG.size()];
         Integer counter = 0;
-        for (Map.Entry<String, String> entry : SettingsProvider.LANG.entrySet())
-        {
+        for (Map.Entry<String, String> entry : SettingsProvider.LANG.entrySet()) {
             langEntries[counter] = entry.getValue();
             langValues[counter] = entry.getKey();
             counter++;
@@ -123,14 +117,11 @@ public class PreferenceActivity extends PreferenceFragment
         languagePreference.setEntryValues(langValues);
         languagePreference.setDefaultValue(mSettings.getLanguage());
         languagePreference.setValue(mSettings.getLanguage());
-        languagePreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
-        {
+        languagePreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue)
-            {
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
                 // Check if value has really changed:
-                if (!mSettings.getLanguage().equals(newValue.toString()))
-                {
+                if (!mSettings.getLanguage().equals(newValue.toString())) {
                     // Force reload settings
                     mSettings.setLanguage(newValue.toString());
 
@@ -151,8 +142,7 @@ public class PreferenceActivity extends PreferenceFragment
         List<AppInfo> actHiddenApps = actHiddenAppsAdapter.getAppList();
         CharSequence[] hiddenEntries = new CharSequence[actHiddenApps.size()];
         CharSequence[] hiddenEntryValues = new CharSequence[actHiddenApps.size()];
-        for (Integer i = 0; i < actHiddenApps.size(); i++)
-        {
+        for (Integer i = 0; i < actHiddenApps.size(); i++) {
             AppInfo actApp = actHiddenApps.get(i);
             hiddenEntries[i] = actApp.getDisplayName();
             hiddenEntryValues[i] = actApp.packageName;
@@ -166,11 +156,9 @@ public class PreferenceActivity extends PreferenceFragment
         EditTextPreference appIconSize = (EditTextPreference) findPreference("prefAppIconSize");
         appIconSize.setDefaultValue(mSettings.getAppIconSize().toString());
         appIconSize.setText(mSettings.getAppIconSize().toString());
-        appIconSize.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
-        {
+        appIconSize.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue)
-            {
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
                 return mSettings.setAppIconSize(newValue, true);
             }
         });
@@ -178,11 +166,9 @@ public class PreferenceActivity extends PreferenceFragment
         EditTextPreference doubleClickInterval = (EditTextPreference) findPreference("prefClickInterval");
         doubleClickInterval.setDefaultValue(mSettings.getDoubleClickInterval().toString());
         doubleClickInterval.setText(mSettings.getDoubleClickInterval().toString());
-        doubleClickInterval.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
-        {
+        doubleClickInterval.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue)
-            {
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
                 return mSettings.setDoubleClickInterval(newValue, true);
             }
         });
@@ -190,27 +176,22 @@ public class PreferenceActivity extends PreferenceFragment
         EditTextPreference jumpbackWatchdogTime = (EditTextPreference) findPreference("prefJumpbackWatchdogTime");
         jumpbackWatchdogTime.setDefaultValue(mSettings.getJumpbackWatchdogTime().toString());
         jumpbackWatchdogTime.setText(mSettings.getJumpbackWatchdogTime().toString());
-        jumpbackWatchdogTime.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
-        {
+        jumpbackWatchdogTime.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue)
-            {
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
                 return mSettings.setJumpbackWatchdogTime(newValue, true);
             }
         });
         // Disable this setting on FireOS 5 and higher
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-        {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             jumpbackWatchdogTime.setSummary(getActivity().getResources().getString(R.string.feature_only_availabe_fireos3_and_older));
             jumpbackWatchdogTime.setEnabled(false);
         }
 
         Preference prefWallpaper = (Preference) findPreference("prefWallpaper");
-        prefWallpaper.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
-        {
+        prefWallpaper.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
-            public boolean onPreferenceClick(Preference preference)
-            {
+            public boolean onPreferenceClick(Preference preference) {
                 WallpaperSelectDialog wallpaperSelector = new WallpaperSelectDialog((MainActivity) PreferenceActivity.this.getActivity());
                 wallpaperSelector.show();
                 return false;
@@ -218,45 +199,34 @@ public class PreferenceActivity extends PreferenceFragment
         });
 
         Preference prefExportCurrentSettings = (Preference) findPreference("prefExportCurrentSettings");
-        prefExportCurrentSettings.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
-        {
+        prefExportCurrentSettings.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
-            public boolean onPreferenceClick(Preference preference)
-            {
+            public boolean onPreferenceClick(Preference preference) {
                 Toast.makeText(getActivity(), Tools.settingsExport(getActivity()), Toast.LENGTH_SHORT).show();
                 return false;
             }
         });
 
         Preference prefImportCurrentSettings = (Preference) findPreference("prefImportCurrentSettings");
-        prefImportCurrentSettings.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
-        {
+        prefImportCurrentSettings.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
-            public boolean onPreferenceClick(Preference preference)
-            {
+            public boolean onPreferenceClick(Preference preference) {
                 String retVal = Tools.settingsImport(getActivity());
-                if (retVal == null)
-                {
+                if (retVal == null) {
                     Toast.makeText(getActivity(), "Settings imported successful, restart..", Toast.LENGTH_SHORT).show();
-                    Thread restarter = new Thread(new Runnable()
-                    {
+                    Thread restarter = new Thread(new Runnable() {
                         @Override
-                        public void run()
-                        {
-                            try
-                            {
+                        public void run() {
+                            try {
                                 Thread.sleep(2000);
-                            }
-                            catch (Exception ignore)
-                            {
+                            } catch (Exception ignore) {
                             }
 
                             Tools.doRestart(getActivity());
                         }
                     });
                     restarter.start();
-                } else
-                {
+                } else {
                     Toast.makeText(getActivity(), retVal, Toast.LENGTH_SHORT).show();
                 }
                 return false;
@@ -264,22 +234,17 @@ public class PreferenceActivity extends PreferenceFragment
         });
 
         Preference prefBackgroundObservationEnabled = (Preference) findPreference("prefBackgroundObservationEnabled");
-        prefBackgroundObservationEnabled.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
-        {
+        prefBackgroundObservationEnabled.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue)
-            {
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
                 mSettings.setBackgroundObserverEnabled((Boolean) newValue);
 
-                if(mSettings.getBackgroundObserverEnabled())
-                {
+                if (mSettings.getBackgroundObserverEnabled()) {
                     // Start foreground service
                     Intent startIntent = new Intent(PreferenceActivity.this.getActivity(), ForeGroundService.class);
                     startIntent.setAction(ForeGroundService.FOREGROUNDSERVICE_START);
                     PreferenceActivity.this.getActivity().startService(startIntent);
-                }
-                else
-                {
+                } else {
                     // Stop foreground service
                     Intent stopIntent = new Intent(PreferenceActivity.this.getActivity(), ForeGroundService.class);
                     stopIntent.setAction(ForeGroundService.FOREGROUNDSERVICE_STOP);
@@ -291,11 +256,9 @@ public class PreferenceActivity extends PreferenceFragment
         });
 
         Preference prefBackgroundObservationViaAdb = (Preference) findPreference("prefBackgroundObservationViaAdb");
-        prefBackgroundObservationViaAdb.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
-        {
+        prefBackgroundObservationViaAdb.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue)
-            {
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
                 mSettings.setBackgroundObservationViaAdb((Boolean) newValue);
 
                 // Stop foreground service
@@ -303,21 +266,18 @@ public class PreferenceActivity extends PreferenceFragment
                 stopIntent.setAction(ForeGroundService.FOREGROUNDSERVICE_STOP);
                 PreferenceActivity.this.getActivity().startService(stopIntent);
 
-                if (mSettings.getBackgroundObserverEnabled())
-                {
+                if (mSettings.getBackgroundObserverEnabled()) {
                     // Start foreground service
                     Intent startIntent = new Intent(PreferenceActivity.this.getActivity(), ForeGroundService.class);
                     startIntent.setAction(ForeGroundService.FOREGROUNDSERVICE_START);
                     PreferenceActivity.this.getActivity().startService(startIntent);
                 }
 
-                if (mSettings.getBackgroundObservationViaAdb())
-                {
+                if (mSettings.getBackgroundObservationViaAdb()) {
                     InfoOverlayDialog infoDialog = InfoOverlayDialog.newInstance(getActivity().getResources().getString(R.string.observation_via_adb_title), getActivity().getResources().getString(R.string.observation_via_adb_summary));
                     FragmentManager fm = getActivity().getFragmentManager();
                     infoDialog.show(fm, "");
-                } else
-                {
+                } else {
                     InfoOverlayDialog infoDialog = InfoOverlayDialog.newInstance(getActivity().getResources().getString(R.string.observation_without_adb_title), getActivity().getResources().getString(R.string.observation_without_adb_summary));
                     FragmentManager fm = getActivity().getFragmentManager();
                     infoDialog.show(fm, "");
@@ -328,11 +288,9 @@ public class PreferenceActivity extends PreferenceFragment
         });
 
         Preference prefVirtualOpenAdbSettings = (Preference) findPreference("prefVirtualOpenAdbSettings");
-        prefVirtualOpenAdbSettings.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
-        {
+        prefVirtualOpenAdbSettings.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
-            public boolean onPreferenceClick(Preference preference)
-            {
+            public boolean onPreferenceClick(Preference preference) {
                 // Open ADB settings
                 Intent adbSettingsOpenIntent = new Intent("android.settings.APPLICATON_DEVELOPMENT_SETTINGS");
                 PreferenceActivity.this.getActivity().startActivity(adbSettingsOpenIntent);
@@ -346,8 +304,7 @@ public class PreferenceActivity extends PreferenceFragment
 
 
     @Override
-    public void onPause()
-    {
+    public void onPause() {
         super.onPause();
 
         PreferenceManager.getDefaultSharedPreferences(getActivity()).unregisterOnSharedPreferenceChangeListener(mSharedPreferenceListener);
@@ -357,8 +314,7 @@ public class PreferenceActivity extends PreferenceFragment
     }
 
     @Override
-    public void onResume()
-    {
+    public void onResume() {
         super.onResume();
 
         PreferenceManager.getDefaultSharedPreferences(getActivity()).registerOnSharedPreferenceChangeListener(mSharedPreferenceListener);

@@ -9,20 +9,22 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import de.belu.firestopper.R;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Info Overlay for additional information
  */
-public class InfoOverlayDialog extends DialogFragment
-{
+
+@Slf4j
+public class InfoOverlayDialog extends DialogFragment {
     /**
      * Create a new Info-Overlay dialog
-     * @param title Title of the info dialog
+     *
+     * @param title   Title of the info dialog
      * @param summary Text of the info dialog
      * @return the dialog
      */
-    public static InfoOverlayDialog newInstance(String title, String summary)
-    {
+    public static InfoOverlayDialog newInstance(String title, String summary) {
         // Create dialog and set custom style
         InfoOverlayDialog dialog = new InfoOverlayDialog();
         dialog.setStyle(DialogFragment.STYLE_NO_FRAME, R.style.TransparentDialog);
@@ -42,28 +44,24 @@ public class InfoOverlayDialog extends DialogFragment
     /**
      * Default constructor required for DialogFragment
      */
-    public InfoOverlayDialog()
-    {
+    public InfoOverlayDialog() {
     }
 
-    public void setTitleAndSummary(String title, String summary)
-    {
+    public void setTitleAndSummary(String title, String summary) {
         // Set title and summary
         mTitle = title;
         mSummary = summary;
     }
 
     @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState)
-    {
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
         final Dialog dialog = super.onCreateDialog(savedInstanceState);
         dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
         return dialog;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-    {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Create view
         View view = inflater.inflate(R.layout.infooverlaydialog, container);
 

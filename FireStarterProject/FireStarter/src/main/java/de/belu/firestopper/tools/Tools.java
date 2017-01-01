@@ -30,12 +30,14 @@ import java.util.Enumeration;
 
 import de.belu.firestopper.R;
 import de.belu.firestopper.observer.ForeGroundService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Tools class to provide some additional infos
  */
-public class Tools
-{
+
+@Slf4j
+public class Tools {
     // Fallback-value if timeout-value is not found
     private static final int FALLBACK_SCREEN_TIMEOUT_VALUE = 30000;
 
@@ -47,23 +49,18 @@ public class Tools
      *
      * @param c
      */
-    public static void doRestart(Context c)
-    {
-        try
-        {
+    public static void doRestart(Context c) {
+        try {
             //check if the context is given
-            if (c != null)
-            {
+            if (c != null) {
                 //fetch the packagemanager so we can get the default launch activity
                 // (you can replace this intent with any other activity if you want
                 PackageManager pm = c.getPackageManager();
                 //check if we got the PackageManager
-                if (pm != null)
-                {
+                if (pm != null) {
                     //create the intent with the default start activity for your application
                     Intent mStartActivity = pm.getLaunchIntentForPackage(c.getPackageName());
-                    if (mStartActivity != null)
-                    {
+                    if (mStartActivity != null) {
                         mStartActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
                         // Stop foreground service
@@ -80,39 +77,31 @@ public class Tools
 
                         //kill the application
                         System.exit(0);
-                    } else
-                    {
+                    } else {
                         Log.e("AppRestarter", "Was not able to restart application, mStartActivity null");
                     }
-                } else
-                {
+                } else {
                     Log.e("AppRestarter", "Was not able to restart application, PM null");
                 }
-            } else
-            {
+            } else {
                 Log.e("AppRestarter", "Was not able to restart application, Context null");
             }
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Log.e("AppRestarter", "Was not able to restart application");
         }
     }
 
-    public static long getSleepModeTimeout(Context c)
-    {
+    public static long getSleepModeTimeout(Context c) {
         long currentTimeout = Settings.System.getLong(c.getContentResolver(), Settings.System.SCREEN_OFF_TIMEOUT, FALLBACK_SCREEN_TIMEOUT_VALUE);
-        Log.d("SLEEPMODE", "CurrentSleepModeTime: " + currentTimeout);
+        log.debug("CurrentSleepModeTime: " + currentTimeout);
         return currentTimeout;
     }
 
-    public static void setSleepModeTimeout(Context c, long valueInMs)
-    {
+    public static void setSleepModeTimeout(Context c, long valueInMs) {
         Settings.System.putInt(c.getContentResolver(), Settings.System.SCREEN_OFF_TIMEOUT, (int) valueInMs);
     }
 
-    public static String formatInterval(final long ms)
-    {
+    public static String formatInterval(final long ms) {
         long millis = ms % 1000;
         long x = ms / 1000;
         long seconds = x % 60;
@@ -130,24 +119,17 @@ public class Tools
      * @param c context
      * @return active ip address
      */
-    public static String getActiveIpAddress(Context c, String defValue)
-    {
-        try
-        {
+    public static String getActiveIpAddress(Context c, String defValue) {
+        try {
             String retVal = "";
 
-            try
-            {
-                for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); )
-                {
+            try {
+                for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
                     NetworkInterface intf = en.nextElement();
-                    for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); )
-                    {
+                    for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
                         InetAddress inetAddress = enumIpAddr.nextElement();
-                        if (!inetAddress.isLoopbackAddress())
-                        {
-                            if (!retVal.equals(""))
-                            {
+                        if (!inetAddress.isLoopbackAddress()) {
+                            if (!retVal.equals("")) {
                                 retVal += ", ";
                             }
                             // retVal += Formatter.formatIpAddress(inetAddress.hashCode());
@@ -155,13 +137,10 @@ public class Tools
                         }
                     }
                 }
-            }
-            catch (SocketException ex)
-            {
+            } catch (SocketException ex) {
             }
 
-            if (retVal == null || retVal.equals(""))
-            {
+            if (retVal == null || retVal.equals("")) {
                 retVal = defValue;
             }
 
@@ -169,16 +148,13 @@ public class Tools
             NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
 
             String subType = activeNetworkInfo.getSubtypeName();
-            if (subType != null && !subType.equals(""))
-            {
+            if (subType != null && !subType.equals("")) {
                 subType = "-" + subType;
             }
 
             retVal = activeNetworkInfo.getTypeName() + subType + ": " + retVal;
             return retVal;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             return defValue;
         }
     }
@@ -189,16 +165,12 @@ public class Tools
      * @param defValue the value to be returned if info could
      *                 not be resolved
      */
-    public static String getWifiSsid(Context context, String defValue)
-    {
-        try
-        {
+    public static String getWifiSsid(Context context, String defValue) {
+        try {
             WifiManager wifiMgr = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
             WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
             return wifiInfo.getSSID();
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             return defValue;
         }
     }
@@ -206,11 +178,9 @@ public class Tools
     /**
      * @return Details about the device
      */
-    public static String getDeviceDetails()
-    {
+    public static String getDeviceDetails() {
         String versionName = getProp("ro.build.version.name");
-        if(!versionName.equals(""))
-        {
+        if (!versionName.equals("")) {
             versionName = "- " + versionName;
         }
 
@@ -220,24 +190,20 @@ public class Tools
 
     /**
      * Makes a system call to "getprop" and returns the property
+     *
      * @param propertyName name of the property like ro.build.version.name
      * @return property content or empty string if not found
      */
-    public static String getProp(String propertyName)
-    {
+    public static String getProp(String propertyName) {
         String result = "";
-        if(propertyName != null && !propertyName.equals(""))
-        {
+        if (propertyName != null && !propertyName.equals("")) {
             Process getProcess = null;
-            try
-            {
+            try {
                 getProcess = Runtime.getRuntime().exec("getprop " + propertyName);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(getProcess.getInputStream()));
                 result = reader.readLine().trim();
                 getProcess.destroy();
-            }
-            catch (java.io.IOException e)
-            {
+            } catch (java.io.IOException e) {
             }
         }
         return result;
@@ -249,16 +215,12 @@ public class Tools
      * @param defValue the value to be returned if the hostname could
      *                 not be resolved
      */
-    public static String getHostName(String defValue)
-    {
-        try
-        {
+    public static String getHostName(String defValue) {
+        try {
             Method getString = Build.class.getDeclaredMethod("getString", String.class);
             getString.setAccessible(true);
             return getString.invoke(null, "net.hostname").toString();
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             return defValue;
         }
     }
@@ -268,9 +230,8 @@ public class Tools
      * @param dip Value in DIP
      * @return Value in Pixel
      */
-    public static int getPixelFromDip(Context c, int dip)
-    {
-        int retVal = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, c.getResources().getDisplayMetrics());
+    public static int getPixelFromDip(Context c, int dip) {
+        int retVal = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, c.getResources().getDisplayMetrics());
         return retVal;
     }
 
@@ -278,8 +239,7 @@ public class Tools
      * @param context
      * @return Current version of FireStarter
      */
-    public static String getCurrentAppVersion(Context context)
-    {
+    public static String getCurrentAppVersion(Context context) {
         return getCurrentAppVersion(context, context.getApplicationInfo().packageName);
     }
 
@@ -287,16 +247,12 @@ public class Tools
      * @param context
      * @return Current version of an app
      */
-    public static String getCurrentAppVersion(Context context, String app)
-    {
+    public static String getCurrentAppVersion(Context context, String app) {
         String retVal = context.getResources().getString(R.string.not_installed);
 
-        try
-        {
+        try {
             retVal = "v" + context.getPackageManager().getPackageInfo(app, 0).versionName;
-        }
-        catch (PackageManager.NameNotFoundException e)
-        {
+        } catch (PackageManager.NameNotFoundException e) {
         }
 
         return retVal;
@@ -308,54 +264,41 @@ public class Tools
      * @param f Directory
      * @throws IOException
      */
-    public static void deleteDirectoryRecursively(Context context, File f, Boolean onlyContent) throws IOException
-    {
-        if (f.isDirectory())
-        {
-            for (File c : f.listFiles())
-            {
+    public static void deleteDirectoryRecursively(Context context, File f, Boolean onlyContent) throws IOException {
+        if (f.isDirectory()) {
+            for (File c : f.listFiles()) {
                 deleteDirectoryRecursively(context, c, false);
             }
         }
 
-        if (!onlyContent)
-        {
-            if (!f.delete())
-            {
+        if (!onlyContent) {
+            if (!f.delete()) {
                 throw new IOException("Failed to delete file: " + f);
             }
             context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + f.getAbsolutePath())));
         }
     }
 
-    public static String settingsExport(Context c)
-    {
+    public static String settingsExport(Context c) {
         String retVal = "Settings export failed..";
 
-        try
-        {
+        try {
             ZipDirectory.zipDirectory(c.getApplicationInfo().dataDir, EXPORT_FILE_PATH_NAME);
             retVal = "Settings exported to: " + EXPORT_FILE_PATH_NAME;
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             retVal += " " + e.getMessage();
         }
 
         return retVal;
     }
 
-    public static String settingsImport(Context c)
-    {
+    public static String settingsImport(Context c) {
         String retVal = null;
 
-        try
-        {
+        try {
             File dataDir = new File(c.getApplicationInfo().dataDir);
             ZipDirectory.unZipDirectory(new File(EXPORT_FILE_PATH_NAME), dataDir);
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             retVal = "Settings import failed: " + e.getMessage();
         }
 
@@ -370,25 +313,24 @@ public class Tools
      * @param fitHeight
      * @return
      */
-    public static Bitmap resizeBitmapToFit(Bitmap source, Integer fitWidth, Integer fitHeight)
-    {
+    public static Bitmap resizeBitmapToFit(Bitmap source, Integer fitWidth, Integer fitHeight) {
         return ThumbnailUtils.extractThumbnail(source, fitWidth, fitHeight);
 //        // Set new width and height to fit center
 //        int targetW = fitWidth;
 //        int targetH = fitHeight;
-//        Log.d("PHOTO", "Target-Size : " + targetW + "x" + targetH);
+//        log.debug("Target-Size : " + targetW + "x" + targetH);
 //
 //        // Get size of current bitmap
 //        int photoW = source.getWidth();
 //        int photoH = source.getHeight();
-//        Log.d("PHOTO", "Source-Size : " + photoW + "x" + photoH);
+//        log.debug("Source-Size : " + photoW + "x" + photoH);
 //
 //        // Create and return correct bitmap
 //        Matrix m = new Matrix();
 //        m.setRectToRect(new RectF(0, 0, photoW, photoH), new RectF(0, 0, targetW, targetH), Matrix.ScaleToFit.CENTER);
 //
 //        Bitmap retVal = Bitmap.createBitmap(source, 0, 0, photoW, photoH, m, true);
-//        Log.d("PHOTO", "Cropped-Size: " + retVal.getWidth() + "x" + retVal.getHeight());
+//        log.debug("Cropped-Size: " + retVal.getWidth() + "x" + retVal.getHeight());
 //        return retVal;
     }
 }

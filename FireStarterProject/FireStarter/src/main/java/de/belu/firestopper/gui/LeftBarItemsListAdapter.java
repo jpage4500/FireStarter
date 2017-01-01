@@ -11,30 +11,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.belu.firestopper.R;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Adpater for items in the left selection bar
  */
-public class LeftBarItemsListAdapter extends BaseAdapter
-{
+
+@Slf4j
+public class LeftBarItemsListAdapter extends BaseAdapter {
     /**
      * A left bar fragment item
      */
-    public static class FragmentListItem
-    {
+    public static class FragmentListItem {
         public String description;
         public String className;
 
 
-        public FragmentListItem(String description, String className)
-        {
+        public FragmentListItem(String description, String className) {
             this.description = description;
             this.className = className;
         }
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return description;
         }
     }
@@ -46,11 +45,9 @@ public class LeftBarItemsListAdapter extends BaseAdapter
     private Context mContext;
 
     /** Create new adapter */
-    public LeftBarItemsListAdapter(Context context)
-    {
+    public LeftBarItemsListAdapter(Context context) {
         mContext = context;
-        if(mItems == null)
-        {
+        if (mItems == null) {
             mItems = new ArrayList<FragmentListItem>();
             mItems.add(new FragmentListItem(mContext.getResources().getString(R.string.leftbar_allapps), AppActivity.class.getName()));
             mItems.add(new FragmentListItem(mContext.getResources().getString(R.string.leftbar_infos), InfosPrefActivity.class.getName()));
@@ -62,8 +59,7 @@ public class LeftBarItemsListAdapter extends BaseAdapter
     /**
      * @return Count of installed apps
      */
-    public int getCount()
-    {
+    public int getCount() {
         return mItems.size();
     }
 
@@ -71,35 +67,30 @@ public class LeftBarItemsListAdapter extends BaseAdapter
      * @param position Position of item to be returned
      * @return Item on position
      */
-    public FragmentListItem getItem(int position)
-    {
+    public FragmentListItem getItem(int position) {
         return mItems.get(position);
     }
 
     /**
      * Currently not used..
      */
-    public long getItemId(int position)
-    {
+    public long getItemId(int position) {
         return position;
     }
 
     /**
      * @return View of the given position
      */
-    public View getView(int position, View convertView, ViewGroup parent)
-    {
+    public View getView(int position, View convertView, ViewGroup parent) {
         // Inflate layout
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View itemView;
 
-        if (convertView == null)
-        {
+        if (convertView == null) {
             // get layout from mobile.xml
             itemView = inflater.inflate(R.layout.leftbarlistitemlayout, parent, false);
 
-        } else
-        {
+        } else {
             itemView = (View) convertView;
         }
 

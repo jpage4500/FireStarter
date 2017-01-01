@@ -17,6 +17,9 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
     buildTypes {
+        debug {
+            versionNameSuffix ".DEBUG"
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -26,6 +29,9 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+    provided 'org.glassfish:javax.annotation:10.0-b28'
     compile 'com.android.support:appcompat-v7:22.1.1'
     compile 'org.jsoup:jsoup:1.8.3'
+    compile 'org.slf4j:slf4j-api:1.7.22'                                // slf4j logging framework
+    provided 'org.projectlombok:lombok:1.16.10'                         // lombok annotation support
 }

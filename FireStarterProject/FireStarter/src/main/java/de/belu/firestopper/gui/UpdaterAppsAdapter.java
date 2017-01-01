@@ -18,20 +18,21 @@ import de.belu.firestopper.tools.KodiUpdater;
 import de.belu.firestopper.tools.SPMCUpdater;
 import de.belu.firestopper.tools.SettingsProvider;
 import de.belu.firestopper.tools.Updater;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Adapter that lists all installed apps
  */
-public class UpdaterAppsAdapter extends BaseAdapter
-{
+
+@Slf4j
+public class UpdaterAppsAdapter extends BaseAdapter {
     Activity mActivity;
     private List<Updater> mUpdaterList;
 
     /**
      * Create new UpdaterAppsadapter
      */
-    public UpdaterAppsAdapter(Activity activity)
-    {
+    public UpdaterAppsAdapter(Activity activity) {
         // Set context
         mActivity = activity;
 
@@ -45,8 +46,7 @@ public class UpdaterAppsAdapter extends BaseAdapter
     /**
      * @return Count of installed apps
      */
-    public int getCount()
-    {
+    public int getCount() {
         return mUpdaterList.size();
     }
 
@@ -54,39 +54,33 @@ public class UpdaterAppsAdapter extends BaseAdapter
      * @param position Position of item to be returned
      * @return Item on position
      */
-    public Object getItem(int position)
-    {
+    public Object getItem(int position) {
         return mUpdaterList.get(position);
     }
 
     /**
      * Currently not used..
      */
-    public long getItemId(int position)
-    {
+    public long getItemId(int position) {
         return position;
     }
 
     /**
      * @return View of the given position
      */
-    public View getView(int position, View convertView, ViewGroup parent)
-    {
+    public View getView(int position, View convertView, ViewGroup parent) {
         // Get act updater
         final Updater actUpdater = mUpdaterList.get(position);
 
         // Inflate layout
         View rootView;
 
-        if (convertView == null)
-        {
+        if (convertView == null) {
             LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             rootView = new View(mActivity);
             rootView = inflater.inflate(R.layout.appupdateritemlayout, parent, false);
 
-        }
-        else
-        {
+        } else {
             rootView = (View) convertView;
         }
 
@@ -101,8 +95,7 @@ public class UpdaterAppsAdapter extends BaseAdapter
         // Set latest version
         final TextView textViewLatestVersion = (TextView) rootView.findViewById(R.id.latestVersion);
         String latestVersion = actUpdater.getLatestVersion();
-        if(latestVersion == null)
-        {
+        if (latestVersion == null) {
             latestVersion = mActivity.getResources().getString(R.string.update_hitcheckfor);
         }
         textViewLatestVersion.setText(latestVersion);
@@ -110,27 +103,20 @@ public class UpdaterAppsAdapter extends BaseAdapter
         // Create an UpdaterDialogHandler
         final UpdaterDialogHandler updaterDialogHandler = new UpdaterDialogHandler(mActivity, actUpdater);
         actUpdater.DialogHandler = updaterDialogHandler;
-        updaterDialogHandler.setCheckForUpdateFinishedListener(new Updater.OnCheckForUpdateFinishedListener()
-        {
+        updaterDialogHandler.setCheckForUpdateFinishedListener(new Updater.OnCheckForUpdateFinishedListener() {
             @Override
-            public void onCheckForUpdateFinished(String message)
-            {
-                if (actUpdater.getLatestVersion() != null)
-                {
-                    if (actUpdater.isVersionNewer(actUpdater.getCurrentVersion(mActivity), actUpdater.getLatestVersion()))
-                    {
+            public void onCheckForUpdateFinished(String message) {
+                if (actUpdater.getLatestVersion() != null) {
+                    if (actUpdater.isVersionNewer(actUpdater.getCurrentVersion(mActivity), actUpdater.getLatestVersion())) {
                         textViewLatestVersion.setText(actUpdater.getLatestVersion() + " - " + mActivity.getResources().getString(R.string.update_foundnew));
 
-                        if (actUpdater instanceof FireStarterUpdater)
-                        {
+                        if (actUpdater instanceof FireStarterUpdater) {
                             AppActivity.LATEST_APP_VERSION = actUpdater.getLatestVersion();
                         }
-                    } else
-                    {
+                    } else {
                         textViewLatestVersion.setText(actUpdater.getLatestVersion() + " - " + mActivity.getResources().getString(R.string.update_foundnotnew));
                     }
-                } else
-                {
+                } else {
                     textViewLatestVersion.setText(message);
                 }
             }
@@ -138,33 +124,27 @@ public class UpdaterAppsAdapter extends BaseAdapter
 
         // Set the button onclicks
         Button checkUpdateButton = (Button) rootView.findViewById(R.id.buttonCheckForUpdate);
-        checkUpdateButton.setOnClickListener(new View.OnClickListener()
-        {
+        checkUpdateButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 updaterDialogHandler.checkForUpdate();
             }
         });
 
         Button updateButton = (Button) rootView.findViewById(R.id.buttonUpdate);
-        updateButton.setOnClickListener(new View.OnClickListener()
-        {
+        updateButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 updaterDialogHandler.performUpdate();
 
-                if(actUpdater instanceof FireStarterUpdater)
-                {
+                if (actUpdater instanceof FireStarterUpdater) {
                     SettingsProvider settings = SettingsProvider.getInstance(mActivity);
                     settings.setHaveUpdateSeen(false);
                 }
             }
         });
 
-        if(rootView.getResources().getString(R.string.not_installed).equals(textViewCurrentVersion.getText()))
-        {
+        if (rootView.getResources().getString(R.string.not_installed).equals(textViewCurrentVersion.getText())) {
             // App is not installed, change update to install text
             updateButton.setText(rootView.getResources().getString(R.string.install));
         }

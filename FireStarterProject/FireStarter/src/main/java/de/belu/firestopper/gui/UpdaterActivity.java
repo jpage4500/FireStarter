@@ -2,7 +2,6 @@ package de.belu.firestopper.gui;
 
 import android.app.Fragment;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,12 +15,14 @@ import de.belu.firestopper.R;
 import de.belu.firestopper.tools.FireStarterUpdater;
 import de.belu.firestopper.tools.SettingsProvider;
 import de.belu.firestopper.tools.Updater;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Shows the updates for all available installable apps including FireStarter itself
  */
-public class UpdaterActivity extends Fragment
-{
+
+@Slf4j
+public class UpdaterActivity extends Fragment {
     /** Instance of settings provider */
     private SettingsProvider mSettings = SettingsProvider.getInstance(getActivity());
 
@@ -35,11 +36,11 @@ public class UpdaterActivity extends Fragment
     UpdaterAppsAdapter mUpdaterAppsAdapter;
 
     /** Mandatory for fragment initation */
-    public UpdaterActivity(){ }
+    public UpdaterActivity() {
+    }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-    {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.updateractivity, container, false);
 
         // Get ListView
@@ -56,33 +57,26 @@ public class UpdaterActivity extends Fragment
         mListView.setClickable(false);
 
         // Trigger update mechanism when first view is ready..
-        mListView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
-        {
+        mListView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
-            public void onGlobalLayout()
-            {
-                try
-                {
+            public void onGlobalLayout() {
+                try {
                     // Remove listener
                     mListView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
-                    if(mTriggerUpdate)
-                    {
+                    if (mTriggerUpdate) {
                         mTriggerUpdate = false;
 
                         Updater actFireStarterUpdater = (Updater) mUpdaterAppsAdapter.getItem(0);
-                        if(actFireStarterUpdater != null && actFireStarterUpdater instanceof FireStarterUpdater)
-                        {
+                        if (actFireStarterUpdater != null && actFireStarterUpdater instanceof FireStarterUpdater) {
                             actFireStarterUpdater.DialogHandler.performUpdate();
                         }
                     }
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     StringWriter errors = new StringWriter();
                     e.printStackTrace(new PrintWriter(errors));
                     String errorReason = errors.toString();
-                    Log.d(MainActivity.class.getName(), "Failed to trigger update directly: \n" + errorReason);
+                    log.debug("Failed to trigger update directly: \n" + errorReason);
                 }
             }
         });
@@ -91,26 +85,22 @@ public class UpdaterActivity extends Fragment
     }
 
     /** Trigger update programmtically */
-    public void triggerUpdateOnStartup()
-    {
+    public void triggerUpdateOnStartup() {
         mTriggerUpdate = true;
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
     @Override
-    public void onPause()
-    {
+    public void onPause() {
         super.onPause();
     }
 
     @Override
-    public void onResume()
-    {
+    public void onResume() {
         super.onResume();
         mUpdaterAppsAdapter.notifyDataSetChanged();
     }

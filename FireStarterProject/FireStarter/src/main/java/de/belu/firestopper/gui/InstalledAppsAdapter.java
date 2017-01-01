@@ -8,7 +8,6 @@ import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,12 +30,14 @@ import de.belu.firestopper.tools.AppInfo;
 import de.belu.firestopper.tools.AppStarter;
 import de.belu.firestopper.tools.SettingsProvider;
 import de.belu.firestopper.tools.Tools;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Adapter that lists all installed apps
  */
-public class InstalledAppsAdapter extends BaseAdapter
-{
+
+@Slf4j
+public class InstalledAppsAdapter extends BaseAdapter {
     /** Virtual package for settings app */
     public static final String VIRTUAL_SETTINGS_PACKAGE = "de.belu.firestopper.virtual.settings";
 
@@ -60,20 +61,20 @@ public class InstalledAppsAdapter extends BaseAdapter
 
     /**
      * Create new InstalledAppsAdapter
+     *
      * @param c Current context
      */
-    public InstalledAppsAdapter(Context c)
-    {
+    public InstalledAppsAdapter(Context c) {
         this(c, false, false);
     }
 
     /**
      * Create new InstalledAppsAdapter
-     * @param c Current context
+     *
+     * @param c             Current context
      * @param includeOwnApp Include this app (de.belu.firestopper)
      */
-    public InstalledAppsAdapter(Context c, Boolean includeOwnApp, Boolean showHiddenApps)
-    {
+    public InstalledAppsAdapter(Context c, Boolean includeOwnApp, Boolean showHiddenApps) {
         mContext = c;
         mIncludeOwnApp = includeOwnApp;
         mShowHiddenApps = showHiddenApps;
@@ -90,35 +91,30 @@ public class InstalledAppsAdapter extends BaseAdapter
 
     /**
      * Create a launchable intent by package-name
-     * @param context Current context
+     *
+     * @param context     Current context
      * @param packageName Package name of app
      * @return Launchable intent
      */
     @SuppressLint("NewApi")
-    public static Intent getLaunchableIntentByPackageName(Context context, String packageName)
-    {
+    public static Intent getLaunchableIntentByPackageName(Context context, String packageName) {
         // Create intent
         Intent launchIntent = null;
 
         // Check if package is one of the virtual packages
-        if(packageName.equals(VIRTUAL_SETTINGS_PACKAGE))
-        {
+        if (packageName.equals(VIRTUAL_SETTINGS_PACKAGE)) {
             launchIntent = new Intent(android.provider.Settings.ACTION_SETTINGS);
 
             // Start settings as new activity
             launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        }
-        else
-        {
-            try
-            {
+        } else {
+            try {
                 launchIntent = context.getPackageManager().getLeanbackLaunchIntentForPackage(packageName);
+            } catch (Throwable ignore) {
             }
-            catch(Throwable ignore) { }
 
-            if(launchIntent == null)
-            {
+            if (launchIntent == null) {
                 launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
             }
         }
@@ -130,8 +126,7 @@ public class InstalledAppsAdapter extends BaseAdapter
     /**
      * @return Count of installed apps
      */
-    public int getCount()
-    {
+    public int getCount() {
         return mInstalledApps.size();
     }
 
@@ -139,35 +134,30 @@ public class InstalledAppsAdapter extends BaseAdapter
      * @param position Position of item to be returned
      * @return Item on position
      */
-    public Object getItem(int position)
-    {
+    public Object getItem(int position) {
         return mInstalledApps.get(position);
     }
 
     /**
      * Currently not used..
      */
-    public long getItemId(int position)
-    {
+    public long getItemId(int position) {
         return position;
     }
 
     /**
      * @return List of found apps
      */
-    public List<AppInfo> getAppList()
-    {
+    public List<AppInfo> getAppList() {
         return mInstalledApps;
     }
 
     /**
      * Store current package-order in settings
      */
-    public void storeNewPackageOrder()
-    {
+    public void storeNewPackageOrder() {
         List<String> packageList = new ArrayList<String>();
-        for(AppInfo actApp : mInstalledApps)
-        {
+        for (AppInfo actApp : mInstalledApps) {
             packageList.add(actApp.packageName);
         }
         mSettings.setPackageOrder(packageList);
@@ -175,25 +165,21 @@ public class InstalledAppsAdapter extends BaseAdapter
 
     /**
      * Move certain item to certain position
-     * @param app Item to move
+     *
+     * @param app      Item to move
      * @param position Position to move to
      */
-    public void moveAppToPosition(AppInfo app, int position)
-    {
-        if(mInstalledApps.contains(app))
-        {
-            try
-            {
+    public void moveAppToPosition(AppInfo app, int position) {
+        if (mInstalledApps.contains(app)) {
+            try {
                 mInstalledApps.remove(app);
                 mInstalledApps.add(position, app);
                 notifyDataSetChanged();
-            }
-            catch(Exception e)
-            {
+            } catch (Exception e) {
                 StringWriter errors = new StringWriter();
                 e.printStackTrace(new PrintWriter(errors));
                 String errorReason = errors.toString();
-                Log.d(InstalledAppsAdapter.class.getName(), "Error while moving app: \n" + errorReason);
+                log.debug("Error while moving app: \n" + errorReason);
             }
         }
     }
@@ -201,8 +187,7 @@ public class InstalledAppsAdapter extends BaseAdapter
     /**
      * @return View of the given position
      */
-    public View getView(int position, View convertView, ViewGroup parent)
-    {
+    public View getView(int position, View convertView, ViewGroup parent) {
         // Get act app
         AppInfo actApp = mInstalledApps.get(position);
 
@@ -210,28 +195,22 @@ public class InstalledAppsAdapter extends BaseAdapter
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View gridView;
 
-        if (convertView == null)
-        {
+        if (convertView == null) {
             gridView = new View(mContext);
 
             // get layout depending on setting
-            if(mSettings.getShowBackgroundForAppNames())
-            {
+            if (mSettings.getShowBackgroundForAppNames()) {
                 gridView = inflater.inflate(R.layout.appdrawergriditemlayout_withbackground, parent, false);
-            }
-            else
-            {
+            } else {
                 gridView = inflater.inflate(R.layout.appdrawergriditemlayout, parent, false);
             }
 
-        } else
-        {
+        } else {
             gridView = (View) convertView;
         }
 
         Integer appIconSize = mSettings.getAppIconSize();
-        if(appIconSize > 0)
-        {
+        if (appIconSize > 0) {
             // Set size of items
             appIconSize = Tools.getPixelFromDip(parent.getContext(), appIconSize);
             LinearLayout linearLayout = (LinearLayout) gridView.findViewById(R.id.linearLayout);
@@ -255,17 +234,13 @@ public class InstalledAppsAdapter extends BaseAdapter
     /**
      * Load all installed apps and order them correctly
      */
-    public void loadInstalledApps()
-    {
+    public void loadInstalledApps() {
         // Get hashset of hidden apps
         Set<String> hiddenApps;
-        if(mShowHiddenApps)
-        {
+        if (mShowHiddenApps) {
             // Create empty hidden-list
             hiddenApps = new HashSet<String>();
-        }
-        else
-        {
+        } else {
             hiddenApps = mSettings.getHiddenApps();
         }
 
@@ -277,24 +252,19 @@ public class InstalledAppsAdapter extends BaseAdapter
         Boolean includeSysApps = mSettings.getShowSystemApps();
         String ownPackageName = mContext.getApplicationContext().getPackageName();
         Map<String, ApplicationInfo> appMap = new LinkedHashMap<String, ApplicationInfo>();
-        for(ApplicationInfo installedApplication : installedApplications)
-        {
-            if(!hiddenApps.contains(installedApplication.packageName))
-            {
+        for (ApplicationInfo installedApplication : installedApplications) {
+            if (!hiddenApps.contains(installedApplication.packageName)) {
                 // Check for system app
                 Boolean isSystemApp = ((installedApplication.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) == 1 ||
-                                       (installedApplication.flags & ApplicationInfo.FLAG_SYSTEM) == 1);
+                        (installedApplication.flags & ApplicationInfo.FLAG_SYSTEM) == 1);
 
                 // If amazon-home, mark not as system app
-                if(isSystemApp && installedApplication.packageName.equals(mDefaultLauncherPackage))
-                {
+                if (isSystemApp && installedApplication.packageName.equals(mDefaultLauncherPackage)) {
                     isSystemApp = false;
                 }
 
-                if(includeSysApps || !isSystemApp)
-                {
-                    if((mIncludeOwnApp || !installedApplication.packageName.equals(ownPackageName)))
-                    {
+                if (includeSysApps || !isSystemApp) {
+                    if ((mIncludeOwnApp || !installedApplication.packageName.equals(ownPackageName))) {
                         appMap.put(installedApplication.packageName, installedApplication);
                     }
                 }
@@ -302,28 +272,23 @@ public class InstalledAppsAdapter extends BaseAdapter
         }
 
         // Add virtual packages if not hided
-        if(!hiddenApps.contains(VIRTUAL_SETTINGS_PACKAGE))
-        {
+        if (!hiddenApps.contains(VIRTUAL_SETTINGS_PACKAGE)) {
             ApplicationInfo applicationInfo = new ApplicationInfo();
             applicationInfo.packageName = VIRTUAL_SETTINGS_PACKAGE;
-            appMap.put(VIRTUAL_SETTINGS_PACKAGE, new AppInfo(mContext, applicationInfo)
-            {
+            appMap.put(VIRTUAL_SETTINGS_PACKAGE, new AppInfo(mContext, applicationInfo) {
                 @Override
-                public String getDisplayName()
-                {
+                public String getDisplayName() {
                     return mContext.getResources().getString(R.string.AmazonSettings);
                 }
 
                 @Override
-                public Drawable getDisplayIcon()
-                {
+                public Drawable getDisplayIcon() {
                     Drawable retVal = null;
 
-                    try
-                    {
+                    try {
                         retVal = new BitmapDrawable(mContext.getResources(), BitmapFactory.decodeStream(mContext.getAssets().open("firetv-settings-icon.png")));
+                    } catch (Exception ignore) {
                     }
-                    catch (Exception ignore){ }
 
                     return retVal;
                 }
@@ -337,10 +302,8 @@ public class InstalledAppsAdapter extends BaseAdapter
         mInstalledApps = new ArrayList<AppInfo>();
 
         // First handle all apps of the last run
-        for(String packageName : packageOrder)
-        {
-            if(appMap.containsKey(packageName))
-            {
+        for (String packageName : packageOrder) {
+            if (appMap.containsKey(packageName)) {
                 addAppToCurrentList(appMap.get(packageName));
                 appMap.remove(packageName);
             }
@@ -348,23 +311,20 @@ public class InstalledAppsAdapter extends BaseAdapter
 
         // Default the amazon launcher to the first position
         // (if user has moved it, it is not anymore in list here)
-        if(appMap.containsKey(mDefaultLauncherPackage))
-        {
+        if (appMap.containsKey(mDefaultLauncherPackage)) {
             addAppToCurrentList(appMap.get(mDefaultLauncherPackage));
             appMap.remove(mDefaultLauncherPackage);
         }
 
         // Default amazon settings to the second position
         // (if user has moved it, it is not anymore in list here)
-        if(appMap.containsKey(VIRTUAL_SETTINGS_PACKAGE))
-        {
+        if (appMap.containsKey(VIRTUAL_SETTINGS_PACKAGE)) {
             addAppToCurrentList(appMap.get(VIRTUAL_SETTINGS_PACKAGE));
             appMap.remove(VIRTUAL_SETTINGS_PACKAGE);
         }
 
         // Now handle all other apps
-        for(ApplicationInfo installedApplication : appMap.values())
-        {
+        for (ApplicationInfo installedApplication : appMap.values()) {
             addAppToCurrentList(installedApplication);
         }
     }
@@ -372,43 +332,32 @@ public class InstalledAppsAdapter extends BaseAdapter
     /**
      * @param app App to be added to current apps-list
      */
-    private void addAppToCurrentList(ApplicationInfo app)
-    {
-        if(app.packageName.equals(mDefaultLauncherPackage))
-        {
-            AppInfo amazonLauncher = new AppInfo(mContext, app)
-            {
+    private void addAppToCurrentList(ApplicationInfo app) {
+        if (app.packageName.equals(mDefaultLauncherPackage)) {
+            AppInfo amazonLauncher = new AppInfo(mContext, app) {
                 @Override
-                public String getDisplayName()
-                {
+                public String getDisplayName() {
                     return mContext.getResources().getString(R.string.AmazonHome);
                 }
 
                 @Override
-                public Drawable getDisplayIcon()
-                {
+                public Drawable getDisplayIcon() {
                     Drawable retVal = null;
 
-                    try
-                    {
+                    try {
                         retVal = new BitmapDrawable(mContext.getResources(), BitmapFactory.decodeStream(mContext.getAssets().open("firetv-home-icon.png")));
+                    } catch (Exception ignore) {
                     }
-                    catch (Exception ignore){ }
 
                     return retVal;
                 }
             };
 
             mInstalledApps.add(amazonLauncher);
-        }
-        else
-        {
-            if(app instanceof AppInfo)
-            {
-                mInstalledApps.add((AppInfo)app);
-            }
-            else
-            {
+        } else {
+            if (app instanceof AppInfo) {
+                mInstalledApps.add((AppInfo) app);
+            } else {
                 mInstalledApps.add(new AppInfo(mContext, app));
             }
         }

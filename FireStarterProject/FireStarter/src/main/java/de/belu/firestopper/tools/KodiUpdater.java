@@ -1,7 +1,6 @@
 package de.belu.firestopper.tools;
 
 import android.content.Context;
-import android.util.Log;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -10,10 +9,12 @@ import org.jsoup.select.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
-public class KodiUpdater extends Updater
-{
-    public static List<String> UPDATE_POLICY = new ArrayList<String>()
-    {
+import lombok.extern.slf4j.Slf4j;
+
+
+@Slf4j
+public class KodiUpdater extends Updater {
+    public static List<String> UPDATE_POLICY = new ArrayList<String>() {
         {
             add("Stable");
             add("Beta and RC");
@@ -34,27 +35,23 @@ public class KodiUpdater extends Updater
     private SettingsProvider mSettings;
 
     /** Constructor to get Context */
-    public KodiUpdater(Context context)
-    {
+    public KodiUpdater(Context context) {
         mContext = context;
         mSettings = SettingsProvider.getInstance(context);
     }
 
     @Override
-    public String getAppName()
-    {
+    public String getAppName() {
         return "Kodi";
     }
 
     @Override
-    public String getPackageName(Context context)
-    {
+    public String getPackageName(Context context) {
         return "org.xbmc.kodi";
     }
 
     @Override
-    public Boolean isVersionNewer(String oldVersion, String newVersion)
-    {
+    public Boolean isVersionNewer(String oldVersion, String newVersion) {
 //        // Kodi versiong String can have additional RC-Version which is lower
 //        // than equal version String without RC-Version
 //        Boolean retVal = false;
@@ -136,8 +133,7 @@ public class KodiUpdater extends Updater
         Boolean retVal = false;
         String workOldVersion = oldVersion.replace("_", "-").toUpperCase();
         String workNewVersion = newVersion.replace("_", "-").toUpperCase();
-        if(!workOldVersion.equals(workNewVersion))
-        {
+        if (!workOldVersion.equals(workNewVersion)) {
             retVal = true;
         }
 
@@ -145,14 +141,12 @@ public class KodiUpdater extends Updater
     }
 
     @Override
-    protected void updateLatestVersionAndApkDownloadUrl() throws Exception
-    {
+    protected void updateLatestVersionAndApkDownloadUrl() throws Exception {
         String updatePolicy = mSettings.getKodiUpdatePolicy();
         String updateUrl = mUpdateUrl;
-        Log.d("KODI-UPDATER", "Policy: " + updatePolicy);
+        log.debug("Policy: " + updatePolicy);
 
-        if(updatePolicy.equals(UPDATE_POLICY.get(2)))
-        {
+        if (updatePolicy.equals(UPDATE_POLICY.get(2))) {
             // Change link to nightlies
             updateUrl = mUpdateUrlNightly;
         }
@@ -160,53 +154,44 @@ public class KodiUpdater extends Updater
         Document doc = Jsoup.connect(updateUrl).get();
         Elements files = doc.select("#list tbody tr");
         String latestApk = "";
-        for(int i = 0; i < files.size(); i++)
-        {
+        for (int i = 0; i < files.size(); i++) {
             String foundApk = files.get(i).select("td").first().text();
-            Log.d("KODI-UPDATER", "Found: " + foundApk);
-            if(foundApk.toLowerCase().endsWith(".apk"))
-            {
-                if(updatePolicy.equals(UPDATE_POLICY.get(1)) || updatePolicy.equals(UPDATE_POLICY.get(2)))
-                {
+            log.debug("Found: " + foundApk);
+            if (foundApk.toLowerCase().endsWith(".apk")) {
+                if (updatePolicy.equals(UPDATE_POLICY.get(1)) || updatePolicy.equals(UPDATE_POLICY.get(2))) {
                     // We use the first file with .apk ending
                     latestApk = foundApk;
                     break;
-                }
-                else
-                {
+                } else {
                     // We have to check if this is no RC, ALPHA, OR BETA
                     String replacedApkName = foundApk.replace("_", "-").toUpperCase();
                     String[] splitApkName = replacedApkName.split("-");
-                    if(splitApkName.length < 4 || (!splitApkName[3].startsWith("RC") && !splitApkName[3].startsWith("BETA") && !splitApkName[3].startsWith("ALPHA")))
-                    {
+                    if (splitApkName.length < 4 || (!splitApkName[3].startsWith("RC") && !splitApkName[3].startsWith("BETA") && !splitApkName[3].startsWith("ALPHA"))) {
                         latestApk = foundApk;
                         break;
                     }
                 }
             }
         }
-        if(latestApk.equals(""))
-        {
+        if (latestApk.equals("")) {
             throw new Exception("No apk found on: " + mUpdateUrl);
         }
 
-        mApkDownloadUrl =  updateUrl + latestApk;
+        mApkDownloadUrl = updateUrl + latestApk;
         mLatestVersion = getVersion(latestApk);
     }
 
     /**
      * Get version from file name
+     *
      * @param apkName file name to be parsedf
      * @return Version string
      */
-    private static String getVersion(String apkName)
-    {
+    private static String getVersion(String apkName) {
         String retVal = null;
 
-        try
-        {
-            if(apkName != null && !apkName.equals(""))
-            {
+        try {
+            if (apkName != null && !apkName.equals("")) {
 //                apkName = apkName
 //                            .replace("kodi-", "")
 //                            .replace("-Isengard", "")
@@ -220,17 +205,15 @@ public class KodiUpdater extends Updater
                 // and check the correct parts
                 String replacedApkName = apkName.replace("_", "-").toUpperCase();
                 String[] splitApkName = replacedApkName.split("-");
-                if(splitApkName.length >= 2)
-                {
+                if (splitApkName.length >= 2) {
                     retVal = "v" + splitApkName[1];
                 }
-                if(splitApkName.length >= 4 && splitApkName[3].startsWith("RC") || splitApkName[3].startsWith("BETA") || splitApkName[3].startsWith("ALPHA"))
-                {
+                if (splitApkName.length >= 4 && splitApkName[3].startsWith("RC") || splitApkName[3].startsWith("BETA") || splitApkName[3].startsWith("ALPHA")) {
                     retVal += "-" + splitApkName[3];
                 }
             }
+        } catch (Exception ignore) {
         }
-        catch(Exception ignore) { }
 
         return retVal;
     }

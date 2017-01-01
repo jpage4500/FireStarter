@@ -13,23 +13,24 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Created by luki on 27.06.15.
  */
-public class FileDialog
-{
+
+@Slf4j
+public class FileDialog {
     private static final String PARENT_DIR = "..";
     private final String TAG = getClass().getName();
     private String[] fileList;
     private File currentPath;
 
-    public interface FileSelectedListener
-    {
+    public interface FileSelectedListener {
         void fileSelected(File file);
     }
 
-    public interface DirectorySelectedListener
-    {
+    public interface DirectorySelectedListener {
         void directorySelected(File directory);
     }
 
@@ -43,8 +44,7 @@ public class FileDialog
      * @param activity
      * @param path
      */
-    public FileDialog(Activity activity, File path)
-    {
+    public FileDialog(Activity activity, File path) {
         this.activity = activity;
         if (!path.exists()) path = Environment.getExternalStorageDirectory();
         loadFileList(path);
@@ -53,32 +53,25 @@ public class FileDialog
     /**
      * @return file dialog
      */
-    public Dialog createFileDialog()
-    {
+    public Dialog createFileDialog() {
         Dialog dialog = null;
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
 
         builder.setTitle(currentPath.getPath());
-        if (selectDirectoryOption)
-        {
-            builder.setPositiveButton("Select directory", new DialogInterface.OnClickListener()
-            {
-                public void onClick(DialogInterface dialog, int which)
-                {
+        if (selectDirectoryOption) {
+            builder.setPositiveButton("Select directory", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
                     Log.d(TAG, currentPath.getPath());
                     fireDirectorySelectedEvent(currentPath);
                 }
             });
         }
 
-        builder.setItems(fileList, new DialogInterface.OnClickListener()
-        {
-            public void onClick(DialogInterface dialog, int which)
-            {
+        builder.setItems(fileList, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
                 String fileChosen = fileList[which];
                 File chosenFile = getChosenFile(fileChosen);
-                if (chosenFile.isDirectory())
-                {
+                if (chosenFile.isDirectory()) {
                     loadFileList(chosenFile);
                     dialog.cancel();
                     dialog.dismiss();
@@ -92,84 +85,64 @@ public class FileDialog
     }
 
 
-    public void addFileListener(FileSelectedListener listener)
-    {
+    public void addFileListener(FileSelectedListener listener) {
         fileListenerList.add(listener);
     }
 
-    public void removeFileListener(FileSelectedListener listener)
-    {
+    public void removeFileListener(FileSelectedListener listener) {
         fileListenerList.remove(listener);
     }
 
-    public void setSelectDirectoryOption(boolean selectDirectoryOption)
-    {
+    public void setSelectDirectoryOption(boolean selectDirectoryOption) {
         this.selectDirectoryOption = selectDirectoryOption;
     }
 
-    public void addDirectoryListener(DirectorySelectedListener listener)
-    {
+    public void addDirectoryListener(DirectorySelectedListener listener) {
         dirListenerList.add(listener);
     }
 
-    public void removeDirectoryListener(DirectorySelectedListener listener)
-    {
+    public void removeDirectoryListener(DirectorySelectedListener listener) {
         dirListenerList.remove(listener);
     }
 
     /**
      * Show file dialog
      */
-    public void showDialog()
-    {
+    public void showDialog() {
         createFileDialog().show();
     }
 
-    private void fireFileSelectedEvent(final File file)
-    {
-        fileListenerList.fireEvent(new ListenerList.FireHandler<FileSelectedListener>()
-        {
-            public void fireEvent(FileSelectedListener listener)
-            {
+    private void fireFileSelectedEvent(final File file) {
+        fileListenerList.fireEvent(new ListenerList.FireHandler<FileSelectedListener>() {
+            public void fireEvent(FileSelectedListener listener) {
                 listener.fileSelected(file);
             }
         });
     }
 
-    private void fireDirectorySelectedEvent(final File directory)
-    {
-        dirListenerList.fireEvent(new ListenerList.FireHandler<DirectorySelectedListener>()
-        {
-            public void fireEvent(DirectorySelectedListener listener)
-            {
+    private void fireDirectorySelectedEvent(final File directory) {
+        dirListenerList.fireEvent(new ListenerList.FireHandler<DirectorySelectedListener>() {
+            public void fireEvent(DirectorySelectedListener listener) {
                 listener.directorySelected(directory);
             }
         });
     }
 
-    private void loadFileList(File path)
-    {
+    private void loadFileList(File path) {
         this.currentPath = path;
         List<String> r = new ArrayList<String>();
-        if (path.exists())
-        {
+        if (path.exists()) {
             if (path.getParentFile() != null) r.add(PARENT_DIR);
-            FilenameFilter filter = new FilenameFilter()
-            {
-                public boolean accept(File dir, String filename)
-                {
+            FilenameFilter filter = new FilenameFilter() {
+                public boolean accept(File dir, String filename) {
                     File sel = new File(dir, filename);
                     if (!sel.canRead()) return false;
                     if (selectDirectoryOption) return sel.isDirectory();
-                    else
-                    {
+                    else {
                         boolean endsWith = false;
-                        if(fileEndsWith != null)
-                        {
-                            for (String ending : fileEndsWith)
-                            {
-                                if (filename.toLowerCase().endsWith(ending))
-                                {
+                        if (fileEndsWith != null) {
+                            for (String ending : fileEndsWith) {
+                                if (filename.toLowerCase().endsWith(ending)) {
                                     endsWith = true;
                                     break;
                                 }
@@ -180,8 +153,7 @@ public class FileDialog
                 }
             };
             String[] fileList1 = path.list(filter);
-            for (String file : fileList1)
-            {
+            for (String file : fileList1) {
                 r.add(file);
             }
         }
@@ -189,18 +161,14 @@ public class FileDialog
         fileList = (String[]) r.toArray(new String[]{});
     }
 
-    private File getChosenFile(String fileChosen)
-    {
+    private File getChosenFile(String fileChosen) {
         if (fileChosen.equals(PARENT_DIR)) return currentPath.getParentFile();
         else return new File(currentPath, fileChosen);
     }
 
-    public void setFileEndsWith(String[] fileEndsWith)
-    {
-        if(fileEndsWith != null)
-        {
-            for(Integer i = 0; i < fileEndsWith.length; i++)
-            {
+    public void setFileEndsWith(String[] fileEndsWith) {
+        if (fileEndsWith != null) {
+            for (Integer i = 0; i < fileEndsWith.length; i++) {
                 fileEndsWith[i] = fileEndsWith[i].toLowerCase();
             }
         }
@@ -211,36 +179,29 @@ public class FileDialog
     }
 }
 
-class ListenerList<L>
-{
+class ListenerList<L> {
     private List<L> listenerList = new ArrayList<L>();
 
-    public interface FireHandler<L>
-    {
+    public interface FireHandler<L> {
         void fireEvent(L listener);
     }
 
-    public void add(L listener)
-    {
+    public void add(L listener) {
         listenerList.add(listener);
     }
 
-    public void fireEvent(FireHandler<L> fireHandler)
-    {
+    public void fireEvent(FireHandler<L> fireHandler) {
         List<L> copy = new ArrayList<L>(listenerList);
-        for (L l : copy)
-        {
+        for (L l : copy) {
             fireHandler.fireEvent(l);
         }
     }
 
-    public void remove(L listener)
-    {
+    public void remove(L listener) {
         listenerList.remove(listener);
     }
 
-    public List<L> getListenerList()
-    {
+    public List<L> getListenerList() {
         return listenerList;
     }
 }

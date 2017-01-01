@@ -4,19 +4,21 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.graphics.drawable.Drawable;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Container to hold app informations
  */
-public class AppInfo extends ApplicationInfo
-{
+
+@Slf4j
+public class AppInfo extends ApplicationInfo {
     /** The current context */
     Context mContext;
 
     /**
      * @param app App to be hold
      */
-    public AppInfo(Context context, ApplicationInfo app)
-    {
+    public AppInfo(Context context, ApplicationInfo app) {
         super(app);
         mContext = context;
     }
@@ -24,11 +26,9 @@ public class AppInfo extends ApplicationInfo
     /**
      * @return Name to be displayed
      */
-    public String getDisplayName()
-    {
+    public String getDisplayName() {
         String retVal = this.loadLabel(mContext.getPackageManager()).toString();
-        if(retVal == null || retVal.equals(""))
-        {
+        if (retVal == null || retVal.equals("")) {
             retVal = packageName;
         }
         return retVal;
@@ -37,8 +37,7 @@ public class AppInfo extends ApplicationInfo
     /**
      * @return Icon to be displayed
      */
-    public Drawable getDisplayIcon()
-    {
+    public Drawable getDisplayIcon() {
         return this.loadIcon(mContext.getPackageManager());
     }
 }

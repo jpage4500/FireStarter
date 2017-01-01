@@ -12,16 +12,17 @@ import android.widget.TextView;
 
 import de.belu.firestopper.R;
 import de.belu.firestopper.tools.AppInfo;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * App Settings Overlay for additional settings per app
  */
-public class AppSettingsOverlayDialog extends DialogFragment
-{
-    public enum ActionEnum { NOTHING, SORT, SETTINGS }
 
-    public static AppSettingsOverlayDialog newInstance(AppInfo appInfo)
-    {
+@Slf4j
+public class AppSettingsOverlayDialog extends DialogFragment {
+    public enum ActionEnum {NOTHING, SORT, SETTINGS}
+
+    public static AppSettingsOverlayDialog newInstance(AppInfo appInfo) {
         // Create dialog and set custom style
         AppSettingsOverlayDialog dialog = new AppSettingsOverlayDialog();
         dialog.setStyle(DialogFragment.STYLE_NO_FRAME, R.style.TransparentDialog);
@@ -41,39 +42,36 @@ public class AppSettingsOverlayDialog extends DialogFragment
     /**
      * Default constructor required for DialogFragment
      */
-    public AppSettingsOverlayDialog()
-    {
+    public AppSettingsOverlayDialog() {
     }
 
     /**
      * Set the action click listener
+     *
      * @param listener
      */
-    public void setOnActionClickedHandler(OnActionClickedHandler listener)
-    {
+    public void setOnActionClickedHandler(OnActionClickedHandler listener) {
         onActionClickedHandler = listener;
     }
 
     /**
      * Sets the current AppInfo
+     *
      * @param appInfo
      */
-    public void setAppInfo(AppInfo appInfo)
-    {
+    public void setAppInfo(AppInfo appInfo) {
         mAppInfo = appInfo;
     }
 
     @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState)
-    {
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
         final Dialog dialog = super.onCreateDialog(savedInstanceState);
         dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
         return dialog;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-    {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Create view
         View view = inflater.inflate(R.layout.appsettingsoverlaydialog, container);
 
@@ -85,21 +83,17 @@ public class AppSettingsOverlayDialog extends DialogFragment
         appIcon.setImageDrawable(mAppInfo.getDisplayIcon());
 
         LinearLayout appSort = (LinearLayout) view.findViewById(R.id.appSort);
-        appSort.setOnClickListener(new View.OnClickListener()
-        {
+        appSort.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 fireActionClicked(ActionEnum.SORT);
             }
         });
 
         LinearLayout appSettings = (LinearLayout) view.findViewById(R.id.appSettings);
-        appSettings.setOnClickListener(new View.OnClickListener()
-        {
+        appSettings.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 fireActionClicked(ActionEnum.SETTINGS);
             }
         });
@@ -107,10 +101,8 @@ public class AppSettingsOverlayDialog extends DialogFragment
         return view;
     }
 
-    private void fireActionClicked(ActionEnum action)
-    {
-        if(onActionClickedHandler != null)
-        {
+    private void fireActionClicked(ActionEnum action) {
+        if (onActionClickedHandler != null) {
             onActionClickedHandler.onActionClicked(action);
         }
     }
@@ -118,8 +110,7 @@ public class AppSettingsOverlayDialog extends DialogFragment
     /**
      * Interface for a service error
      */
-    public interface OnActionClickedHandler
-    {
+    public interface OnActionClickedHandler {
         public void onActionClicked(ActionEnum action);
     }
 }

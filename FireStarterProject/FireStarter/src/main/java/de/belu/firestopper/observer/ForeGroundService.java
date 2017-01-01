@@ -25,8 +25,9 @@ import de.belu.firestopper.R;
 import de.belu.firestopper.gui.AppActivity;
 import de.belu.firestopper.gui.MainActivity;
 import de.belu.firestopper.tools.AppStarter;
-import de.belu.firestopper.tools.SettingsProvider;
 import de.belu.firestopper.tools.FireStarterUpdater;
+import de.belu.firestopper.tools.SettingsProvider;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -34,8 +35,9 @@ import de.belu.firestopper.tools.FireStarterUpdater;
  * Here the service is set to ForeGroundService, which is the only
  * Service that is not killed by the Android OS.
  */
-public class ForeGroundService extends Service
-{
+
+@Slf4j
+public class ForeGroundService extends Service {
     /** Start foreground action */
     public static final String FOREGROUNDSERVICE_START = "com.belu.luki.uispeedapptester.action.startforeground";
 
@@ -73,21 +75,17 @@ public class ForeGroundService extends Service
     private Timer mTimer;
 
     // Handler for ScreenOnEvents
-    BroadcastReceiver mScreenOnReceiver = new BroadcastReceiver()
-    {
+    BroadcastReceiver mScreenOnReceiver = new BroadcastReceiver() {
         @Override
-        public void onReceive(Context context, Intent intent)
-        {
+        public void onReceive(Context context, Intent intent) {
             // Possibly used again in future
         }
     };
 
     /** Handler for Home-Button events */
-    OnHomeButtonClickedListener mHomeButtonClickedListener = new OnHomeButtonClickedListener()
-    {
+    OnHomeButtonClickedListener mHomeButtonClickedListener = new OnHomeButtonClickedListener() {
         @Override
-        public void onHomeButtonClicked()
-        {
+        public void onHomeButtonClicked() {
             Log("Received single home button click.");
 
             // Start single click package
@@ -97,8 +95,7 @@ public class ForeGroundService extends Service
         }
 
         @Override
-        public void onHomeButtonDoubleClicked()
-        {
+        public void onHomeButtonDoubleClicked() {
             Log("Received double home button click.");
 
             // Start single click package
@@ -109,20 +106,14 @@ public class ForeGroundService extends Service
     };
 
     /** Handler for error-events */
-    OnServiceErrorListener mOnServiceErrorListener = new OnServiceErrorListener()
-    {
+    OnServiceErrorListener mOnServiceErrorListener = new OnServiceErrorListener() {
         @Override
-        public void onServiceError(final String message)
-        {
-            ForeGroundService.this.runOnUiThread(new Runnable()
-            {
+        public void onServiceError(final String message) {
+            ForeGroundService.this.runOnUiThread(new Runnable() {
                 @Override
-                public void run()
-                {
-                    if(message.equals(BackgroundHomeButtonObserverThreadADB.HANDLE_TOO_MUCH_FAILS))
-                    {
-                        if(mSettings.getBackgroundObservationFallBackToNonAdb())
-                        {
+                public void run() {
+                    if (message.equals(BackgroundHomeButtonObserverThreadADB.HANDLE_TOO_MUCH_FAILS)) {
+                        if (mSettings.getBackgroundObservationFallBackToNonAdb()) {
                             // Send toast
                             Toast.makeText(ForeGroundService.this, getResources().getString(R.string.adb_fail_auto_observation_change), Toast.LENGTH_LONG).show();
 
@@ -131,9 +122,7 @@ public class ForeGroundService extends Service
                             mSettings.setBackgroundObservationViaAdb(false);
                             startBackgroundActions();
                         }
-                    }
-                    else
-                    {
+                    } else {
                         Toast.makeText(ForeGroundService.this, "FireStarter: " + message, Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -145,8 +134,7 @@ public class ForeGroundService extends Service
      * @return Binder object
      */
     @Override
-    public IBinder onBind(Intent arg0)
-    {
+    public IBinder onBind(Intent arg0) {
         Log("onBind");
         return mBinder;
     }
@@ -155,16 +143,12 @@ public class ForeGroundService extends Service
      * Handle start commands (start-stop foreground)
      */
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId)
-    {
+    public int onStartCommand(Intent intent, int flags, int startId) {
         Log("onStartCommand: Received start id " + startId + ": " + intent);
 
-        if (FOREGROUNDSERVICE_START.equals(intent.getAction()))
-        {
+        if (FOREGROUNDSERVICE_START.equals(intent.getAction())) {
             foreGroundServiceStart();
-        }
-        else if (FOREGROUNDSERVICE_STOP.equals(intent.getAction()))
-        {
+        } else if (FOREGROUNDSERVICE_STOP.equals(intent.getAction())) {
             foregroundServiceStop();
         }
 
@@ -172,8 +156,7 @@ public class ForeGroundService extends Service
     }
 
     @Override
-    public void onCreate()
-    {
+    public void onCreate() {
         super.onCreate();
 
         Log("onCreate");
@@ -182,17 +165,14 @@ public class ForeGroundService extends Service
     }
 
     @Override
-    public void onDestroy()
-    {
+    public void onDestroy() {
         Log("onDestroy");
         super.onDestroy();
     }
 
     /** Start the foreground service */
-    private void foreGroundServiceStart()
-    {
-        if(mIsForeGroundRunning)
-        {
+    private void foreGroundServiceStart() {
+        if (mIsForeGroundRunning) {
             Log("Foreground Service already running.");
             return;
         }
@@ -208,10 +188,8 @@ public class ForeGroundService extends Service
     }
 
     /** Stop the foreground service */
-    private void foregroundServiceStop()
-    {
-        if(!mIsForeGroundRunning)
-        {
+    private void foregroundServiceStop() {
+        if (!mIsForeGroundRunning) {
             Log("No Foreground Service running to stop.");
             return;
         }
@@ -226,8 +204,7 @@ public class ForeGroundService extends Service
     }
 
     /** Start the actions that take place in background */
-    private void startBackgroundActions()
-    {
+    private void startBackgroundActions() {
         stopBackgroundActions();
 
         // Schedule task every hour
@@ -240,20 +217,15 @@ public class ForeGroundService extends Service
         Log("Start: " + sdf.format(calendar.getTime()) + " | Every: " + everyXminute + " minutes");
 
         mTimer = new Timer();
-        TimerTask timerTask = new TimerTask()
-        {
+        TimerTask timerTask = new TimerTask() {
             @Override
-            public void run()
-            {
-                try
-                {
+            public void run() {
+                try {
                     Log("Start scheduled update-check:");
                     FireStarterUpdater fireStarterUpdater = new FireStarterUpdater();
                     fireStarterUpdater.checkForUpdate(true);
                     AppActivity.LATEST_APP_VERSION = fireStarterUpdater.getLatestVersion();
-                }
-                catch(Exception e)
-                {
+                } catch (Exception e) {
                     StringWriter errors = new StringWriter();
                     e.printStackTrace(new PrintWriter(errors));
                     String errorReason = errors.toString();
@@ -261,18 +233,15 @@ public class ForeGroundService extends Service
                 }
             }
         };
-        mTimer.schedule(timerTask, calendar.getTime(), 1000*60*everyXminute);
+        mTimer.schedule(timerTask, calendar.getTime(), 1000 * 60 * everyXminute);
 
-        if(mSettings.getBackgroundObservationViaAdb())
-        {
+        if (mSettings.getBackgroundObservationViaAdb()) {
             Log("Start background thread for ADB observation.");
             mBackgroundHomeButtonObserverThreadADB = new BackgroundHomeButtonObserverThreadADB(this);
             mBackgroundHomeButtonObserverThreadADB.setOnHomeButtonClickedListener(mHomeButtonClickedListener);
             mBackgroundHomeButtonObserverThreadADB.setOnServiceErrorListener(mOnServiceErrorListener);
             mBackgroundHomeButtonObserverThreadADB.start();
-        }
-        else
-        {
+        } else {
             Log("Start background thread for NON-ADB observation.");
 
             IntentFilter intentFilter = new IntentFilter();
@@ -291,124 +260,97 @@ public class ForeGroundService extends Service
     }
 
     /** Stops the actions in the background */
-    private void stopBackgroundActions()
-    {
+    private void stopBackgroundActions() {
         // Disable NON-ADB observation
-        try
-        {
+        try {
             unregisterReceiver(mBroadcastHelperReceiver);
+        } catch (Exception ignore) {
         }
-        catch(Exception ignore) {}
-        if(mBackgroundHomeButtonObserverThreadNonADB != null && mBackgroundHomeButtonObserverThreadNonADB.isAlive())
-        {
+        if (mBackgroundHomeButtonObserverThreadNonADB != null && mBackgroundHomeButtonObserverThreadNonADB.isAlive()) {
             Log("Shut down background thread for NON-ADB observation.");
             mBackgroundHomeButtonObserverThreadNonADB.setOnHomeButtonClickedListener(null);
             mBackgroundHomeButtonObserverThreadNonADB.setOnServiceErrorListener(null);
             mBackgroundHomeButtonObserverThreadNonADB.stopThread();
             mBackgroundHomeButtonObserverThreadNonADB.interrupt();
-            try
-            {
+            try {
                 mBackgroundHomeButtonObserverThreadNonADB.join();
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 StringWriter errors = new StringWriter();
                 e.printStackTrace(new PrintWriter(errors));
                 String errorReason = errors.toString();
                 Log("Failed to stop thread: \n" + errorReason);
             }
             mBackgroundHomeButtonObserverThreadNonADB = null;
-        }
-        else
-        {
+        } else {
             Log("No background thread for NON-ADB observation running..");
         }
 
         // Disable ADB observation
-        if(mBackgroundHomeButtonObserverThreadADB != null && mBackgroundHomeButtonObserverThreadADB.isAlive())
-        {
+        if (mBackgroundHomeButtonObserverThreadADB != null && mBackgroundHomeButtonObserverThreadADB.isAlive()) {
             Log("Shut down background thread for ADB observation.");
             mBackgroundHomeButtonObserverThreadADB.setOnHomeButtonClickedListener(null);
             mBackgroundHomeButtonObserverThreadADB.setOnServiceErrorListener(null);
             mBackgroundHomeButtonObserverThreadADB.stopThread();
-            try
-            {
+            try {
                 mBackgroundHomeButtonObserverThreadADB.join(4000);
-            }
-            catch(Exception e)
-            {
+            } catch (Exception e) {
                 StringWriter errors = new StringWriter();
                 e.printStackTrace(new PrintWriter(errors));
                 String errorReason = errors.toString();
                 Log("Failed to stop thread: \n" + errorReason);
             }
 
-            if(mBackgroundHomeButtonObserverThreadADB != null && mBackgroundHomeButtonObserverThreadADB.isAlive())
-            {
+            if (mBackgroundHomeButtonObserverThreadADB != null && mBackgroundHomeButtonObserverThreadADB.isAlive()) {
                 Log("Force shut down background thread.");
                 mBackgroundHomeButtonObserverThreadADB.interrupt();
-                try
-                {
+                try {
                     mBackgroundHomeButtonObserverThreadADB.join();
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     StringWriter errors = new StringWriter();
                     e.printStackTrace(new PrintWriter(errors));
                     String errorReason = errors.toString();
                     Log("Failed to stop thread: \n" + errorReason);
                 }
             }
-        }
-        else
-        {
+        } else {
             Log("No background thread for ADB observation running..");
         }
         mBackgroundHomeButtonObserverThreadADB = null;
 
         // Then check for running timers
-        if(mTimer != null)
-        {
-            try
-            {
+        if (mTimer != null) {
+            try {
                 Log("Stop timed update checks..");
                 mTimer.cancel();
                 mTimer = null;
-            }
-            catch(Exception e)
-            {
+            } catch (Exception e) {
                 StringWriter errors = new StringWriter();
                 e.printStackTrace(new PrintWriter(errors));
                 String errorReason = errors.toString();
                 Log("Failed to stop timed update checks: \n" + errorReason);
             }
-        }
-        else
-        {
+        } else {
             Log("No timed update check is active at the moment.");
         }
 
         // Stop screen on receiver
-        try
-        {
+        try {
             unregisterReceiver(mScreenOnReceiver);
+        } catch (Exception ignore) {
         }
-        catch(Exception ignore){}
     }
 
     /**
      * @return Indicates if the foreground service is running
      */
-    public Boolean getIsForeGroundRunning()
-    {
+    public Boolean getIsForeGroundRunning() {
         return mIsForeGroundRunning;
     }
 
     /**
      * @return Notification object which is shown while foreground service is running
      */
-    private Notification getCompatNotification()
-    {
+    private Notification getCompatNotification() {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
 
         builder.setSmallIcon(R.mipmap.ic_launcher)
@@ -425,27 +367,25 @@ public class ForeGroundService extends Service
     }
 
     /** Runs runnables on the UI-Thread */
-    private void runOnUiThread(Runnable runnable)
-    {
+    private void runOnUiThread(Runnable runnable) {
         mHandler.post(runnable);
     }
 
     /**
      * Log messages to logcat
+     *
      * @param message message to log
      */
-    private void Log(String message)
-    {
+    private void Log(String message) {
         Log.d(ForeGroundService.class.getName(), message);
     }
 
     /**
      * Simple binder class to get current TestRunnerService
      */
-    public class TestRunnerLocalBinder extends Binder
-    {
-        public ForeGroundService getService()
-        {
+
+    public class TestRunnerLocalBinder extends Binder {
+        public ForeGroundService getService() {
             return ForeGroundService.this;
         }
     }

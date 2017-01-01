@@ -2,17 +2,18 @@ package de.belu.firestopper.observer;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.util.Log;
 
 import de.belu.firestopper.tools.AppStarter;
 import de.belu.firestopper.tools.SettingsProvider;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
  * Runs in the Background and observes the home button clicks
  */
-public class BackgroundHomeButtonObserverThreadNonADB extends Thread
-{
+
+@Slf4j
+public class BackgroundHomeButtonObserverThreadNonADB extends Thread {
     /** Home-button-clicked-listener */
     private OnHomeButtonClickedListener mHomeButtonClickedListener = null;
 
@@ -44,13 +45,10 @@ public class BackgroundHomeButtonObserverThreadNonADB extends Thread
     private Boolean mSecondClickInTime = false;
 
     /** Listener for close system dialog events */
-    private BroadcastHelperReceiver.OnReceivedCloseSystemDialog mReceivedCloseSystemDialogListener = new BroadcastHelperReceiver.OnReceivedCloseSystemDialog()
-    {
+    private BroadcastHelperReceiver.OnReceivedCloseSystemDialog mReceivedCloseSystemDialogListener = new BroadcastHelperReceiver.OnReceivedCloseSystemDialog() {
         @Override
-        public void onReceivedCloseSystemDialog(String reason)
-        {
-            if(reason.equals("homekey"))
-            {
+        public void onReceivedCloseSystemDialog(String reason) {
+            if (reason.equals("homekey")) {
                 clickActionDetected();
             }
         }
@@ -59,8 +57,7 @@ public class BackgroundHomeButtonObserverThreadNonADB extends Thread
     /**
      * Create new BackgroundObserverThread
      */
-    public BackgroundHomeButtonObserverThreadNonADB(Context context, BroadcastHelperReceiver broadcastHelperReceiver)
-    {
+    public BackgroundHomeButtonObserverThreadNonADB(Context context, BroadcastHelperReceiver broadcastHelperReceiver) {
         // Get settings instance
         mSettings = SettingsProvider.getInstance(context);
 
@@ -78,37 +75,32 @@ public class BackgroundHomeButtonObserverThreadNonADB extends Thread
         mBroadcastReceiver.setOnReceivedCloseSystemDialog(mReceivedCloseSystemDialogListener);
     }
 
-    public void stopThread()
-    {
+    public void stopThread() {
         mRun = false;
-        try
-        {
+        try {
             Thread.sleep(500);
+        } catch (InterruptedException ignore) {
         }
-        catch (InterruptedException ignore){}
         mBroadcastReceiver.setOnReceivedCloseSystemDialog(null);
     }
-    
+
     /**
      * @param listener OnHomeButtonClickedLister to be added
      */
-    public void setOnHomeButtonClickedListener(OnHomeButtonClickedListener listener)
-    {
+    public void setOnHomeButtonClickedListener(OnHomeButtonClickedListener listener) {
         mHomeButtonClickedListener = listener;
     }
 
     /**
      * @param listener OnServiceErrorListener to be added
      */
-    public void setOnServiceErrorListener(OnServiceErrorListener listener)
-    {
+    public void setOnServiceErrorListener(OnServiceErrorListener listener) {
         mOnServiceErrorListener = listener;
     }
 
     /** Override run-method which is initiated on Thread-Start */
     @Override
-    public void run()
-    {
+    public void run() {
 //        // Start endless-loop to observer the running TopActivity
 //        while(mRun)
 //        {
@@ -119,7 +111,7 @@ public class BackgroundHomeButtonObserverThreadNonADB extends Thread
 //                ComponentName componentInfo = taskInfo.get(0).topActivity;
 //                String packageName = componentInfo.getPackageName();
 //
-//                Log.d(BackgroundHomeButtonObserverThreadNonADB.class.getName(), "TopPackage: " + packageName + " - " + componentInfo.getClassName());
+//                log.debug("TopPackage: " + packageName + " - " + componentInfo.getClassName());
 //
 //                // Check top package
 //                if(packageName.equals(mDefaultLauncherPackage) && !packageName.equals(mLastTopPackage))
@@ -139,85 +131,67 @@ public class BackgroundHomeButtonObserverThreadNonADB extends Thread
 //                StringWriter errors = new StringWriter();
 //                e.printStackTrace(new PrintWriter(errors));
 //                String errorReason = errors.toString();
-//                Log.d(BackgroundHomeButtonObserverThreadNonADB.class.getName(), "Sleep interrupted: \n" + errorReason);
+//                log.debug("Sleep interrupted: \n" + errorReason);
 //            }
 //        }
     }
 
-    private void clickActionDetected()
-    {
-        Log.d("TEST", "click action detected");
+    private void clickActionDetected() {
+        log.debug("click action detected");
 
-        if(mWaitForSecondClickThread != null && mWaitForSecondClickThread.isAlive())
-        {
+        if (mWaitForSecondClickThread != null && mWaitForSecondClickThread.isAlive()) {
             // Signal second click
             mSecondClickInTime = true;
-        }
-        else
-        {
+        } else {
             // For each first home-button click disable immediately the jumpback mechanism
             AppStarter.stopWatchThread();
 
             // Create new thread to check for double click
-            mWaitForSecondClickThread = new Thread(new Runnable()
-            {
+            mWaitForSecondClickThread = new Thread(new Runnable() {
                 @Override
-                public void run()
-                {
-                    try
-                    {
+                public void run() {
+                    try {
                         Thread.sleep(mSettings.getDoubleClickInterval());
-                        if(mSecondClickInTime)
-                        {
+                        if (mSecondClickInTime) {
                             // Fire double click event
                             fireHomeButtonDoubleClickedEvent();
-                        }
-                        else
-                        {
+                        } else {
                             // Fire single click event
                             fireHomeButtonClickedEvent();
                         }
                         mSecondClickInTime = false;
+                    } catch (InterruptedException ignore) {
                     }
-                    catch (InterruptedException ignore){ }
                 }
             });
             mWaitForSecondClickThread.start();
             mSecondClickInTime = false;
         }
     }
-    
+
     /**
      * Fire home button clicked event to all registered listeners
      */
-    private void fireHomeButtonClickedEvent()
-    {
-        Thread fireThread = new Thread(new Runnable()
-        {
+    private void fireHomeButtonClickedEvent() {
+        Thread fireThread = new Thread(new Runnable() {
             @Override
-            public void run()
-            {
-                if(mHomeButtonClickedListener != null)
-                {
+            public void run() {
+                if (mHomeButtonClickedListener != null) {
                     mHomeButtonClickedListener.onHomeButtonClicked();
                 }
             }
         });
         fireThread.start();
     }
-    
+
     /**
      * Fire home button double clicked event to all registered listeners
      */
-    private void fireHomeButtonDoubleClickedEvent()
-    {
-        Thread fireThread = new Thread(new Runnable()
-        {
+    private void fireHomeButtonDoubleClickedEvent() {
+        Thread fireThread = new Thread(new Runnable() {
             @Override
-            public void run()
-            {
-                if(mHomeButtonClickedListener != null)
-                {
+            public void run() {
+                if (mHomeButtonClickedListener != null) {
                     mHomeButtonClickedListener.onHomeButtonDoubleClicked();
                 }
             }
@@ -228,15 +202,11 @@ public class BackgroundHomeButtonObserverThreadNonADB extends Thread
     /**
      * @param message Fire service error message
      */
-    private void fireServiceErrorEvent(final String message)
-    {
-        Thread fireThread = new Thread(new Runnable()
-        {
+    private void fireServiceErrorEvent(final String message) {
+        Thread fireThread = new Thread(new Runnable() {
             @Override
-            public void run()
-            {
-                if(mOnServiceErrorListener != null)
-                {
+            public void run() {
+                if (mOnServiceErrorListener != null) {
                     mOnServiceErrorListener.onServiceError(message);
                 }
             }

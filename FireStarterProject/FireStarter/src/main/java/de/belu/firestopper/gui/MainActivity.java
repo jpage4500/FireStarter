@@ -9,7 +9,6 @@ import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.format.DateUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -31,10 +30,11 @@ import java.util.TimerTask;
 import de.belu.firestopper.R;
 import de.belu.firestopper.observer.ForeGroundService;
 import de.belu.firestopper.tools.SettingsProvider;
+import lombok.extern.slf4j.Slf4j;
 
 
-public class MainActivity extends Activity
-{
+@Slf4j
+public class MainActivity extends Activity {
     private LinearLayout mMainLayout;
     private LinearLayout mSemiTransparentLayout;
     private ListView mListView;
@@ -50,13 +50,12 @@ public class MainActivity extends Activity
     private boolean mOnResumeDirectlyAfterOnCreate = false;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         // Get settings provider
         mSettings = SettingsProvider.getInstance(this);
 
         // Check language
-        Log.d(MainActivity.class.getName(), "Set locale in onCreate");
+        log.debug("Set locale in onCreate");
         setLocale();
 
         // Set flag indicating we are in oncreate
@@ -67,8 +66,7 @@ public class MainActivity extends Activity
         setContentView(R.layout.mainactivity);
 
         // Check if observer have to be started
-        if(mSettings.getBackgroundObserverEnabled())
-        {
+        if (mSettings.getBackgroundObserverEnabled()) {
             // Start foreground service
             Intent startIntent = new Intent(this, ForeGroundService.class);
             startIntent.setAction(ForeGroundService.FOREGROUNDSERVICE_START);
@@ -76,7 +74,7 @@ public class MainActivity extends Activity
         }
 
         // Get base linear layout
-        mMainLayout = (LinearLayout)findViewById(R.id.linearLayoutMain);
+        mMainLayout = (LinearLayout) findViewById(R.id.linearLayoutMain);
 
         // Check if background image have to be set
         WallpaperSelectDialog selectDialog = new WallpaperSelectDialog(this);
@@ -86,36 +84,31 @@ public class MainActivity extends Activity
         mSemiTransparentLayout = (LinearLayout) findViewById(R.id.linearLayoutSemiTransparentBackground);
 
         // Get clock and date
-        mTextViewClock = (TextView)findViewById(R.id.textViewClock);
-        mTextViewDate = (TextView)findViewById(R.id.textViewDate);
+        mTextViewClock = (TextView) findViewById(R.id.textViewClock);
+        mTextViewDate = (TextView) findViewById(R.id.textViewDate);
 
         // Get ListView
-        mListView = (ListView)findViewById(R.id.listView);
+        mListView = (ListView) findViewById(R.id.listView);
 
         // Handle item click listener
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
-        {
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
-            {
-                Log.d(MainActivity.class.getName(), "OnItemClickListener: clicked position " + position);
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                log.debug("OnItemClickListener: clicked position " + position);
                 handleLeftBarItemSelection(parent, view, position, id);
             }
         });
 
         // Handle item selected changes
-        mListView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
-        {
+        mListView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
-            {
-                Log.d(MainActivity.class.getName(), "OnItemSelectedListener: selected position " + position);
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                log.debug("OnItemSelectedListener: selected position " + position);
                 handleLeftBarItemSelection(parent, view, position, id);
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent)
-            {
+            public void onNothingSelected(AdapterView<?> parent) {
 
             }
         });
@@ -125,26 +118,21 @@ public class MainActivity extends Activity
         mListView.setAdapter(actAdapter);
 
         // Focus first item
-        mListView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
-        {
+        mListView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
-            public void onGlobalLayout()
-            {
-                try
-                {
+            public void onGlobalLayout() {
+                try {
                     // Remove listener
                     mListView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
                     // Check if first icon have to be selected
                     mListView.requestFocusFromTouch();
                     mListView.setSelection(0);
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     StringWriter errors = new StringWriter();
                     e.printStackTrace(new PrintWriter(errors));
                     String errorReason = errors.toString();
-                    Log.d(MainActivity.class.getName(), "Failed to focus first left bar list item: \n" + errorReason);
+                    log.debug("Failed to focus first left bar list item: \n" + errorReason);
                 }
             }
         });
@@ -154,12 +142,10 @@ public class MainActivity extends Activity
     }
 
     @Override
-    public void onResume()
-    {
+    public void onResume() {
         // If not onResume directly after onCreate reset locale
-        if(!mOnResumeDirectlyAfterOnCreate)
-        {
-            Log.d(MainActivity.class.getName(), "Set locale again in onResume");
+        if (!mOnResumeDirectlyAfterOnCreate) {
+            log.debug("Set locale again in onResume");
             setLocale();
         }
 
@@ -171,8 +157,7 @@ public class MainActivity extends Activity
     }
 
     @Override
-    public void onPause()
-    {
+    public void onPause() {
         super.onPause();
 
         // Stop update timer
@@ -182,35 +167,28 @@ public class MainActivity extends Activity
         mOnResumeDirectlyAfterOnCreate = false;
     }
 
-    private void setActiveFragment(Fragment fragment)
-    {
-        try
-        {
+    private void setActiveFragment(Fragment fragment) {
+        try {
             // Check fragment type
-            if(fragment instanceof AppActivity)
-            {
+            if (fragment instanceof AppActivity) {
                 // In app overview disable semi-transparent background
                 mSemiTransparentLayout.setBackgroundResource(android.R.color.transparent);
 
                 // Check if animation have to be changed
-                if(mSettings.getHideLeftBarInAppOverview())
-                {
+                if (mSettings.getHideLeftBarInAppOverview()) {
                     mListView.setOnFocusChangeListener(new View.OnFocusChangeListener()
                             //mLeftBar.setOnFocusChangeListener(new View.OnFocusChangeListener()
                     {
                         @Override
-                        public void onFocusChange(View v, boolean hasFocus)
-                        {
-                            Log.d(MainActivity.class.getName(), "LeftBar focus changed to: hasFocus = " + hasFocus);
+                        public void onFocusChange(View v, boolean hasFocus) {
+                            log.debug("LeftBar focus changed to: hasFocus = " + hasFocus);
 
-                            if (mLastSetFragment instanceof AppActivity)
-                            {
+                            if (mLastSetFragment instanceof AppActivity) {
                                 Integer newWidth = 0;
-                                if (hasFocus)
-                                {
+                                if (hasFocus) {
                                     newWidth = Math.round(getResources().getDimension(R.dimen.leftbarwidth));
                                 }
-                                Log.d(MainActivity.class.getName(), "LeftBar new width = " + newWidth);
+                                log.debug("LeftBar new width = " + newWidth);
 
                                 ResizeWidthAnimation anim = new ResizeWidthAnimation(mLeftBar, newWidth);
                                 anim.setDuration(300);
@@ -218,17 +196,12 @@ public class MainActivity extends Activity
                             }
                         }
                     });
-                }
-                else
-                {
+                } else {
                     mListView.setOnFocusChangeListener(null);
                 }
-            }
-            else
-            {
+            } else {
                 // In all other fragments enable semi-transparent background if setting is set
-                if(mSettings.getShowBackgroundForAppNames())
-                {
+                if (mSettings.getShowBackgroundForAppNames()) {
                     mSemiTransparentLayout.setBackgroundResource(R.color.semitransparentbackground_medium);
                 }
             }
@@ -241,62 +214,51 @@ public class MainActivity extends Activity
             FragmentTransaction fragmentTransaction = fm.beginTransaction();
             fragmentTransaction.replace(R.id.item_detail_container, fragment);
             fragmentTransaction.commit();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             StringWriter errors = new StringWriter();
             e.printStackTrace(new PrintWriter(errors));
             String errorReason = errors.toString();
-            Log.d(MainActivity.class.getName(), "Set Active Fragment: Exception: \n" + errorReason);
+            log.debug("Set Active Fragment: Exception: \n" + errorReason);
         }
     }
 
     /**
      * Handles selection or click of the left-bar items..
+     *
      * @param parent
      * @param view
      * @param position
      * @param id
      */
-    private void handleLeftBarItemSelection(AdapterView<?> parent, View view, int position, long id)
-    {
+    private void handleLeftBarItemSelection(AdapterView<?> parent, View view, int position, long id) {
         // Get instance of selected item and set as current fragment
-        try
-        {
-            Log.d(MainActivity.class.getName(), "HandleLeftBarItemSelection: selected position " + position);
+        try {
+            log.debug("HandleLeftBarItemSelection: selected position " + position);
 
             // Create fragment
-            Fragment fragment = (Fragment)Class.forName(((LeftBarItemsListAdapter)parent.getAdapter()).getItem(position).className).getConstructor().newInstance();
+            Fragment fragment = (Fragment) Class.forName(((LeftBarItemsListAdapter) parent.getAdapter()).getItem(position).className).getConstructor().newInstance();
 
             // Set fragment
             setActiveFragment(fragment);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             StringWriter errors = new StringWriter();
             e.printStackTrace(new PrintWriter(errors));
             String errorReason = errors.toString();
-            Log.d(MainActivity.class.getName(), "HandleLeftBarItemSelection: Exception: \n" + errorReason);
+            log.debug("HandleLeftBarItemSelection: Exception: \n" + errorReason);
         }
     }
 
-    private void setLocale()
-    {
+    private void setLocale() {
         // Check language
         String lang = mSettings.getLanguage();
-        if(lang != null && !lang.equals("") && SettingsProvider.LANG.containsKey(lang))
-        {
-            try
-            {
+        if (lang != null && !lang.equals("") && SettingsProvider.LANG.containsKey(lang)) {
+            try {
                 Locale newLocale;
 
                 // If lang is <= 3 chars, it is a language code
-                if(lang.length() <= 3)
-                {
+                if (lang.length() <= 3) {
                     newLocale = new Locale(lang);
-                }
-                else
-                {
+                } else {
                     newLocale = (Locale) Locale.class.getField(lang).get(Locale.getDefault());
                 }
 
@@ -305,13 +267,11 @@ public class MainActivity extends Activity
                 Configuration config = new Configuration(getResources().getConfiguration());
                 config.locale = newLocale;
                 getResources().updateConfiguration(config, getResources().getDisplayMetrics());
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 StringWriter errors = new StringWriter();
                 e.printStackTrace(new PrintWriter(errors));
                 String errorReason = errors.toString();
-                Log.d(MainActivity.class.getName(), "Failed to load custom language setting: \n" + errorReason);
+                log.debug("Failed to load custom language setting: \n" + errorReason);
             }
         }
     }
@@ -319,14 +279,11 @@ public class MainActivity extends Activity
     /**
      * Start the timer to update clock
      */
-    private void startTimer()
-    {
-        mTimer = new Timer ();
-        TimerTask timerTask = new TimerTask()
-        {
+    private void startTimer() {
+        mTimer = new Timer();
+        TimerTask timerTask = new TimerTask() {
             @Override
-            public void run()
-            {
+            public void run() {
                 setDateAndTime();
             }
         };
@@ -338,43 +295,37 @@ public class MainActivity extends Activity
         calendar.set(Calendar.MILLISECOND, 0);
 
         Integer toBeAdded = everyXminute - (calendar.get(Calendar.MINUTE) % everyXminute);
-        if(toBeAdded == 0)
-        {
+        if (toBeAdded == 0) {
             toBeAdded = everyXminute;
         }
         calendar.add(Calendar.MINUTE, toBeAdded);
 
-        mTimer.schedule(timerTask, calendar.getTime(), 1000*60*everyXminute);
-        Log.d(MainActivity.class.getName(), "Update Time started");
+        mTimer.schedule(timerTask, calendar.getTime(), 1000 * 60 * everyXminute);
+        log.debug("Update Time started");
     }
 
     /**
      * Stops the timer to update clock
      */
-    private void stopTimer()
-    {
-        if(mTimer != null)
-        {
+    private void stopTimer() {
+        if (mTimer != null) {
             mTimer.cancel();
             mTimer = null;
         }
-        Log.d(MainActivity.class.getName(), "Update Time stopped");
+        log.debug("Update Time stopped");
     }
 
     /**
      * Sets the current time and date
      */
-    private void setDateAndTime()
-    {
-        runOnUiThread(new Runnable()
-        {
+    private void setDateAndTime() {
+        runOnUiThread(new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
                 // Get current date time
                 Date actDateTime = new Date();
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS");
-                Log.d(MainActivity.class.getName(), "Update Time to " + sdf.format(actDateTime));
+                log.debug("Update Time to " + sdf.format(actDateTime));
 
                 // Set clock
 //                DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, getResources().getConfiguration().locale.getDefault());
@@ -394,46 +345,36 @@ public class MainActivity extends Activity
     /**
      * @param drawable Set this drawable as background image
      */
-    public void setBackgroundImage(Drawable drawable)
-    {
+    public void setBackgroundImage(Drawable drawable) {
         mMainLayout.setBackground(drawable);
     }
 
-    public Integer getBackgroundWidth()
-    {
+    public Integer getBackgroundWidth() {
         return mMainLayout.getWidth();
     }
 
-    public Integer getBackgroundHeight()
-    {
+    public Integer getBackgroundHeight() {
         return mMainLayout.getHeight();
     }
 
     /** Trigger update */
-    public void triggerUpdate()
-    {
-        try
-        {
-            UpdaterActivity fragment = (UpdaterActivity)Class.forName(UpdaterActivity.class.getName()).getConstructor().newInstance();
+    public void triggerUpdate() {
+        try {
+            UpdaterActivity fragment = (UpdaterActivity) Class.forName(UpdaterActivity.class.getName()).getConstructor().newInstance();
             fragment.triggerUpdateOnStartup();
             setActiveFragment(fragment);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public boolean onKeyDown(int keycode, KeyEvent e)
-    {
+    public boolean onKeyDown(int keycode, KeyEvent e) {
         // Check if there is a receiver fragment
-        if(mLastSetFragment != null && mLastSetFragment instanceof CustomFragment)
-        {
-            CustomFragment actFragment = (CustomFragment)mLastSetFragment;
+        if (mLastSetFragment != null && mLastSetFragment instanceof CustomFragment) {
+            CustomFragment actFragment = (CustomFragment) mLastSetFragment;
             Boolean retVal = ((CustomFragment) mLastSetFragment).onKeyDown(keycode, e);
-            if(retVal)
-            {
+            if (retVal) {
                 return true;
             }
         }
@@ -442,24 +383,20 @@ public class MainActivity extends Activity
     }
 
     @Override
-    public void onBackPressed()
-    {
+    public void onBackPressed() {
         boolean isHandled = false;
 
         // Check if there is a receiver fragment
-        if(mLastSetFragment != null && mLastSetFragment instanceof CustomFragment)
-        {
-            CustomFragment actFragment = (CustomFragment)mLastSetFragment;
+        if (mLastSetFragment != null && mLastSetFragment instanceof CustomFragment) {
+            CustomFragment actFragment = (CustomFragment) mLastSetFragment;
             isHandled = ((CustomFragment) mLastSetFragment).onBackPressed();
         }
 
         // Check if back-pressed is already handled
-        if(!isHandled)
-        {
+        if (!isHandled) {
             // If the fragment does not handle the back-button and FireStarter is not
             // on the main-app-view, open main-app-view
-            if(!(mLastSetFragment instanceof AppActivity))
-            {
+            if (!(mLastSetFragment instanceof AppActivity)) {
                 mListView.setSelection(0);
             }
         }

@@ -12,23 +12,23 @@ import java.util.Date;
 
 import de.belu.firestopper.R;
 import de.belu.firestopper.tools.Tools;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Info / System view
  */
-public class InfosPrefActivity extends PreferenceFragment
-{
+
+@Slf4j
+public class InfosPrefActivity extends PreferenceFragment {
     static final long SLEEPTIME_MINIMUM = 1;
     static final long SLEEPTIME_MAXIMUM = 120;
 
-    public InfosPrefActivity()
-    {
+    public InfosPrefActivity() {
 
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         addPreferencesFromResource(R.xml.infoprefactivity);
@@ -51,32 +51,25 @@ public class InfosPrefActivity extends PreferenceFragment
         prefDeviceUpTime.setSummary(upTime);
 
         final EditTextPreference prefSetSleepTimeout = (EditTextPreference) findPreference("prefVirtualSleepTime");
-        prefSetSleepTimeout.setText(((Long)(Tools.getSleepModeTimeout(getActivity()) / 1000 / 60)).toString());
-        prefSetSleepTimeout.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
-        {
+        prefSetSleepTimeout.setText(((Long) (Tools.getSleepModeTimeout(getActivity()) / 1000 / 60)).toString());
+        prefSetSleepTimeout.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue)
-            {
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
                 long newTimeInMinutes = 0;
-                try
-                {
+                try {
                     newTimeInMinutes = Long.valueOf(newValue.toString());
-                }
-                catch (Exception ignore)
-                {
+                } catch (Exception ignore) {
                 }
 
-                do
-                {
-                    if (newTimeInMinutes < SLEEPTIME_MINIMUM || newTimeInMinutes > SLEEPTIME_MAXIMUM)
-                    {
+                do {
+                    if (newTimeInMinutes < SLEEPTIME_MINIMUM || newTimeInMinutes > SLEEPTIME_MAXIMUM) {
                         Toast.makeText(InfosPrefActivity.this.getActivity(), String.format(getActivity().getResources().getString(R.string.sleeptime_limit), SLEEPTIME_MINIMUM, SLEEPTIME_MAXIMUM), Toast.LENGTH_SHORT).show();
                         break;
                     }
 
                     long newTimeInMs = newTimeInMinutes * 60 * 1000;
                     Tools.setSleepModeTimeout(getActivity(), newTimeInMs);
-                    prefSetSleepTimeout.setText(((Long)(Tools.getSleepModeTimeout(getActivity()) / 1000 / 60)).toString());
+                    prefSetSleepTimeout.setText(((Long) (Tools.getSleepModeTimeout(getActivity()) / 1000 / 60)).toString());
                 }
                 while (false);
 
@@ -85,22 +78,18 @@ public class InfosPrefActivity extends PreferenceFragment
         });
 
         Preference prefGoToSleep = (Preference) findPreference("prefVirtualGoToSleep");
-        prefGoToSleep.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
-        {
+        prefGoToSleep.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
-            public boolean onPreferenceClick(Preference preference)
-            {
+            public boolean onPreferenceClick(Preference preference) {
                 Toast.makeText(InfosPrefActivity.this.getActivity(), getActivity().getResources().getString(R.string.gotosleep_summary), Toast.LENGTH_SHORT).show();
                 return false;
             }
         });
 
         Preference prefReboot = (Preference) findPreference("prefVirtualRestart");
-        prefReboot.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
-        {
+        prefReboot.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
-            public boolean onPreferenceClick(Preference preference)
-            {
+            public boolean onPreferenceClick(Preference preference) {
                 Toast.makeText(InfosPrefActivity.this.getActivity(), getActivity().getResources().getString(R.string.system_restart_summary_removed), Toast.LENGTH_SHORT).show();
                 return false;
             }

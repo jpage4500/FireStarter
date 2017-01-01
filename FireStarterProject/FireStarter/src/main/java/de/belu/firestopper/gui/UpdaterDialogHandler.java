@@ -6,12 +6,14 @@ import android.app.ProgressDialog;
 import de.belu.firestopper.R;
 import de.belu.firestopper.tools.FireStarterUpdater;
 import de.belu.firestopper.tools.Updater;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Handles the update-dialogs in case of an update
  */
-public class UpdaterDialogHandler
-{
+
+@Slf4j
+public class UpdaterDialogHandler {
     /** Updater of the dialog handler */
     private Updater mUpdater;
 
@@ -27,8 +29,7 @@ public class UpdaterDialogHandler
     /** Listener for checkforupdate finished event */
     Updater.OnCheckForUpdateFinishedListener mCheckForUpdateFinishedListener = null;
 
-    public UpdaterDialogHandler(Activity activity, Updater updater)
-    {
+    public UpdaterDialogHandler(Activity activity, Updater updater) {
         mActivity = activity;
         mUpdater = updater;
 
@@ -36,19 +37,16 @@ public class UpdaterDialogHandler
         mUpdater.setOnUpdateProgressListener(mOnUpdateProgressListener);
     }
 
-    public void setCheckForUpdateFinishedListener(Updater.OnCheckForUpdateFinishedListener listener)
-    {
+    public void setCheckForUpdateFinishedListener(Updater.OnCheckForUpdateFinishedListener listener) {
         mCheckForUpdateFinishedListener = listener;
     }
 
-    public void checkForUpdate()
-    {
+    public void checkForUpdate() {
         mCheckForUpdateProgress = ProgressDialog.show(mActivity, mActivity.getResources().getString(R.string.update_checkfortitle), mActivity.getResources().getString(R.string.update_checkfordesc), true);
         mUpdater.checkForUpdate();
     }
 
-    public void performUpdate()
-    {
+    public void performUpdate() {
         mUpdateProgress = new ProgressDialog(mActivity);
         mUpdateProgress.setMessage(mActivity.getResources().getString(R.string.update_checkformessage));
         mUpdateProgress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
@@ -60,19 +58,14 @@ public class UpdaterDialogHandler
     }
 
     /** Handle check for update */
-    Updater.OnCheckForUpdateFinishedListener mOnCheckForUpdateFinishedListener = new FireStarterUpdater.OnCheckForUpdateFinishedListener()
-    {
+    Updater.OnCheckForUpdateFinishedListener mOnCheckForUpdateFinishedListener = new FireStarterUpdater.OnCheckForUpdateFinishedListener() {
         @Override
-        public void onCheckForUpdateFinished(final String message)
-        {
-            mActivity.runOnUiThread(new Runnable()
-            {
+        public void onCheckForUpdateFinished(final String message) {
+            mActivity.runOnUiThread(new Runnable() {
                 @Override
-                public void run()
-                {
+                public void run() {
 
-                    if (mCheckForUpdateProgress != null)
-                    {
+                    if (mCheckForUpdateProgress != null) {
                         mCheckForUpdateProgress.dismiss();
                         mCheckForUpdateProgress = null;
                     }
@@ -83,27 +76,20 @@ public class UpdaterDialogHandler
     };
 
     /** Handle update progress */
-    Updater.OnUpdateProgressListener mOnUpdateProgressListener = new FireStarterUpdater.OnUpdateProgressListener()
-    {
+    Updater.OnUpdateProgressListener mOnUpdateProgressListener = new FireStarterUpdater.OnUpdateProgressListener() {
         @Override
-        public void onUpdateProgress(final Boolean isError,final Integer percent, final String message)
-        {
-            mActivity.runOnUiThread(new Runnable()
-            {
+        public void onUpdateProgress(final Boolean isError, final Integer percent, final String message) {
+            mActivity.runOnUiThread(new Runnable() {
                 @Override
-                public void run()
-                {
-                    if (isError)
-                    {
+                public void run() {
+                    if (isError) {
                         mUpdateProgress.setProgress(100);
                         mUpdateProgress.setMessage(message);
                         mUpdateProgress.setCancelable(true);
-                    } else
-                    {
+                    } else {
                         mUpdateProgress.setProgress(percent);
                         mUpdateProgress.setMessage(message);
-                        if (percent >= 100)
-                        {
+                        if (percent >= 100) {
                             mUpdateProgress.setCancelable(true);
                             mUpdateProgress.dismiss();
                         }

@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,14 +22,17 @@ import de.belu.firestopper.tools.AppStarter;
 import de.belu.firestopper.tools.FireStarterUpdater;
 import de.belu.firestopper.tools.SettingsProvider;
 import de.belu.firestopper.tools.Tools;
+import lombok.extern.slf4j.Slf4j;
 
-import static de.belu.firestopper.gui.AppSettingsOverlayDialog.*;
+import static de.belu.firestopper.gui.AppSettingsOverlayDialog.ActionEnum;
+import static de.belu.firestopper.gui.AppSettingsOverlayDialog.OnActionClickedHandler;
+import static de.belu.firestopper.gui.AppSettingsOverlayDialog.newInstance;
 
 /**
  * Launcher main (shows the user apps)
  */
-public class AppActivity extends CustomFragment
-{
+@Slf4j
+public class AppActivity extends CustomFragment {
     /**
      * Default launcher package
      */
@@ -58,11 +60,11 @@ public class AppActivity extends CustomFragment
     private Boolean mHasBeenInOnPauseButNotInDestroy = false;
 
     /** Mandatory for fragment initation */
-    public AppActivity(){ }
+    public AppActivity() {
+    }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-    {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.appactivity, container, false);
 
         // Reset pause flag
@@ -74,61 +76,50 @@ public class AppActivity extends CustomFragment
         // Check for custom app-icon size
         mGridView = (GridView) rootView.findViewById(R.id.gridview);
         Integer appIconSize = mSettings.getAppIconSize();
-        if(appIconSize > 0)
-        {
+        if (appIconSize > 0) {
             // Set size of items
             mGridView.setColumnWidth(Tools.getPixelFromDip(getActivity(), appIconSize));
         }
         mGridView.setAdapter(new InstalledAppsAdapter(getActivity()));
 
         // Focus first item
-        mGridView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
-        {
+        mGridView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
-            public void onGlobalLayout()
-            {
-                try
-                {
+            public void onGlobalLayout() {
+                try {
                     // Remove listener
                     mGridView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
                     // Check if first icon have to be selected
-                    if(mSettings.getAutoSelectFirstIcon() && mGridView.getChildCount() > 0)
-                    {
+                    if (mSettings.getAutoSelectFirstIcon() && mGridView.getChildCount() > 0) {
                         mGridView.requestFocusFromTouch();
                         mGridView.setSelection(0);
                     }
 
                     // Check for new update
                     FireStarterUpdater fireStarterUpdater = new FireStarterUpdater();
-                    if(!mSettings.getHaveUpdateSeen() && fireStarterUpdater.isVersionNewer(Tools.getCurrentAppVersion(getActivity()), LATEST_APP_VERSION))
-                    {
+                    if (!mSettings.getHaveUpdateSeen() && fireStarterUpdater.isVersionNewer(Tools.getCurrentAppVersion(getActivity()), LATEST_APP_VERSION)) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
                         builder.setTitle("FireStarter " + LATEST_APP_VERSION);
                         builder.setMessage("There is a new version of FireStarter, do you want to update?");
 
-                        builder.setPositiveButton("YES", new DialogInterface.OnClickListener()
-                        {
+                        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which)
-                            {
+                            public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();
 
                                 // Trigger update
-                                if(getActivity() instanceof MainActivity)
-                                {
+                                if (getActivity() instanceof MainActivity) {
                                     ((MainActivity) getActivity()).triggerUpdate();
                                 }
                             }
 
                         });
 
-                        builder.setNegativeButton("NO", new DialogInterface.OnClickListener()
-                        {
+                        builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which)
-                            {
+                            public void onClick(DialogInterface dialog, int which) {
                                 // Set have seen
                                 mSettings.setHaveUpdateSeen(true);
                                 dialog.dismiss();
@@ -138,24 +129,19 @@ public class AppActivity extends CustomFragment
                         AlertDialog alert = builder.create();
                         alert.show();
                     }
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     StringWriter errors = new StringWriter();
                     e.printStackTrace(new PrintWriter(errors));
                     String errorReason = errors.toString();
-                    Log.d(MainActivity.class.getName(), "Failed to focus first app: \n" + errorReason);
+                    log.debug("Failed to focus first app: \n" + errorReason);
                 }
             }
         });
 
         // Set click listener
-        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener()
-        {
-            public void onItemClick(AdapterView<?> parent, View v, int position, long id)
-            {
-                if (mMovingApp[0] != null)
-                {
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                if (mMovingApp[0] != null) {
                     // Stop moving
                     mMovingApp[0] = null;
                     mGridView.setDrawSelectorOnTop(false);
@@ -164,8 +150,7 @@ public class AppActivity extends CustomFragment
                     // Save current order
                     InstalledAppsAdapter actAdapter = (InstalledAppsAdapter) parent.getAdapter();
                     actAdapter.storeNewPackageOrder();
-                } else
-                {
+                } else {
                     // Get packagename of the app to be started
                     String packageName = ((AppInfo) parent.getAdapter().getItem(position)).packageName;
 
@@ -176,11 +161,9 @@ public class AppActivity extends CustomFragment
         });
 
         // Set long click listener
-        mGridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener()
-        {
+        mGridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id)
-            {
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 // Get packagename of the app to be started
                 mMovingApp[0] = (AppInfo) parent.getAdapter().getItem(position);
                 mGridView.setDrawSelectorOnTop(true);
@@ -193,21 +176,17 @@ public class AppActivity extends CustomFragment
         });
 
         // Set select listener
-        mGridView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
-        {
+        mGridView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
-            {
-                if (mMovingApp[0] != null)
-                {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (mMovingApp[0] != null) {
                     InstalledAppsAdapter actAdapter = (InstalledAppsAdapter) parent.getAdapter();
                     actAdapter.moveAppToPosition(mMovingApp[0], position);
                 }
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent)
-            {
+            public void onNothingSelected(AdapterView<?> parent) {
                 // Do nothing here
             }
         });
@@ -216,26 +195,22 @@ public class AppActivity extends CustomFragment
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
     @Override
-    public void onPause()
-    {
+    public void onPause() {
         super.onPause();
         mHasBeenInOnPauseButNotInDestroy = true;
     }
 
     @Override
-    public void onResume()
-    {
+    public void onResume() {
         super.onResume();
-        if (mHasBeenInOnPauseButNotInDestroy)
-        {
+        if (mHasBeenInOnPauseButNotInDestroy) {
             // Reload app order
-            Log.d(MainActivity.class.getName(), "Reloading Order.");
+            log.debug("Reloading Order.");
             InstalledAppsAdapter actAdapter = (InstalledAppsAdapter) mGridView.getAdapter();
             actAdapter.loadInstalledApps();
             actAdapter.notifyDataSetChanged();
@@ -243,19 +218,17 @@ public class AppActivity extends CustomFragment
     }
 
     @Override
-    public boolean onBackPressed()
-    {
+    public boolean onBackPressed() {
         boolean retVal = false;
 
-        if(mMovingApp[0] != null)
-        {
+        if (mMovingApp[0] != null) {
             // Stop moving without saving the order
             mMovingApp[0] = null;
             mGridView.setDrawSelectorOnTop(false);
             mGridView.invalidate();
 
             // Restore old order
-            InstalledAppsAdapter actAdapter = (InstalledAppsAdapter)mGridView.getAdapter();
+            InstalledAppsAdapter actAdapter = (InstalledAppsAdapter) mGridView.getAdapter();
             actAdapter.loadInstalledApps();
             actAdapter.notifyDataSetChanged();
 
@@ -266,10 +239,8 @@ public class AppActivity extends CustomFragment
     }
 
     @Override
-    public boolean onKeyDown(int keycode, KeyEvent e)
-    {
-        if(mMovingApp[0] == null && keycode == KeyEvent.KEYCODE_MENU)
-        {
+    public boolean onKeyDown(int keycode, KeyEvent e) {
+        if (mMovingApp[0] == null && keycode == KeyEvent.KEYCODE_MENU) {
             showAppSettingsDialogForCurrentApp();
             return true;
         }
@@ -277,27 +248,21 @@ public class AppActivity extends CustomFragment
         return false;
     }
 
-    private void showAppSettingsDialogForCurrentApp()
-    {
-        try
-        {
+    private void showAppSettingsDialogForCurrentApp() {
+        try {
             // Check selected app
-            if(mGridView.hasFocus())
-            {
+            if (mGridView.hasFocus()) {
                 final AppInfo appInfo = (AppInfo) ((InstalledAppsAdapter) mGridView.getAdapter()).getItem(mGridView.getSelectedItemPosition());
                 final AppSettingsOverlayDialog appSettingsDialog = newInstance(appInfo);
 
-                appSettingsDialog.setOnActionClickedHandler(new OnActionClickedHandler()
-                {
+                appSettingsDialog.setOnActionClickedHandler(new OnActionClickedHandler() {
                     @Override
-                    public void onActionClicked(ActionEnum action)
-                    {
-                        Log.d("AppSettingsAction", "Clicked action: " + action.toString());
+                    public void onActionClicked(ActionEnum action) {
+                        log.debug("Clicked action: " + action.toString());
 
                         // Close dialog and evaluate click event:
                         appSettingsDialog.dismiss();
-                        switch (action)
-                        {
+                        switch (action) {
                             case SORT:
                                 // Get packagename of the app to be started
                                 mMovingApp[0] = appInfo;
@@ -318,13 +283,11 @@ public class AppActivity extends CustomFragment
                 FragmentManager fm = getActivity().getFragmentManager();
                 appSettingsDialog.show(fm, "");
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             StringWriter errors = new StringWriter();
             e.printStackTrace(new PrintWriter(errors));
             String errorReason = errors.toString();
-            Log.d(MainActivity.class.getName(), "Failed to load app settings: \n" + errorReason);
+            log.debug("Failed to load app settings: \n" + errorReason);
         }
     }
 }
