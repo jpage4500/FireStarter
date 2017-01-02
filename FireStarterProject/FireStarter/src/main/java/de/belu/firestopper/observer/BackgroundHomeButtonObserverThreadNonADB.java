@@ -101,6 +101,7 @@ public class BackgroundHomeButtonObserverThreadNonADB extends Thread {
     /** Override run-method which is initiated on Thread-Start */
     @Override
     public void run() {
+        log.debug("run:");
 //        // Start endless-loop to observer the running TopActivity
 //        while(mRun)
 //        {

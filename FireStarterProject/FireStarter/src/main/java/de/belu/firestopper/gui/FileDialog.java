@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Environment;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -61,7 +60,7 @@ public class FileDialog {
         if (selectDirectoryOption) {
             builder.setPositiveButton("Select directory", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
-                    Log.d(TAG, currentPath.getPath());
+                    log.debug(currentPath.getPath());
                     fireDirectorySelectedEvent(currentPath);
                 }
             });

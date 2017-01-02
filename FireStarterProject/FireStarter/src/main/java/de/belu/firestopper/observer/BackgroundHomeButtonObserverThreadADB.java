@@ -138,7 +138,7 @@ public class BackgroundHomeButtonObserverThreadADB extends Thread {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
                 NetworkInterface intf = en.nextElement();
                 if (intf.getDisplayName().equals("eth0") || intf.getDisplayName().equals("wlan0")) {
-                    Log.d("networkInterface", intf.getDisplayName());
+                    log.debug("getIpAddresses: {}", intf.getDisplayName());
                     for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
                         InetAddress inetAddress = enumIpAddr.nextElement();
                         if (!inetAddress.isLoopbackAddress() && !inetAddress.isMulticastAddress()) {

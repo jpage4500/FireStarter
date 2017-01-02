@@ -3,7 +3,6 @@ package de.belu.firestopper.observer;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +28,7 @@ public class BroadcastHelperReceiver extends BroadcastReceiver {
         if (paramIntent.hasExtra("reason")) {
             msg += paramIntent.getStringExtra("reason");
         }
-        Log.d(BackgroundHomeButtonObserverThreadNonADB.class.getName(), msg);
+        log.debug(msg);
 
         String reason = "";
         if (paramIntent.hasExtra("reason")) {

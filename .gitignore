@@ -17,5 +17,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Mac files
+.DS_Store
+
 # Android Studio
 .idea
